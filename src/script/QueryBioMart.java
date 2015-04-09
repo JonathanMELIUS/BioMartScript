@@ -88,7 +88,7 @@ public class QueryBioMart {
 			return sb.toString();
 		}
 	}
-	public static Document createQuery(String organism, String format ) {
+	public static Document createQuery(String organism, String externalSource, String format) {
 		try {
 			DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
 			DocumentBuilder docBuilder = dbf.newDocumentBuilder();
@@ -119,7 +119,7 @@ public class QueryBioMart {
 			dataset.appendChild(gene_id);
 
 			gene_id = query.createElement("Attribute");
-			gene_id.setAttribute("name","mim_gene_accession");
+			gene_id.setAttribute("name",externalSource);
 			dataset.appendChild(gene_id);
 
 			return query;

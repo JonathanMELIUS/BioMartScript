@@ -21,14 +21,17 @@ import org.w3c.dom.Document;
 
 public class BioMart2Bdb {
 
-	final static String IDENTIFIERS_ORG_PREFIX = "http://identifiers.org/";
 
 	public static void main(String[] args) throws ClassNotFoundException, IDMapperException, IOException {
 		// TODO Auto-generated method stub
-		DataSourceTxt.init();
+		DataSourceTxt.init(); //Initialize BrideDb data source
+		
+		//In this example, we query for the mapping between Ensembl -> OMIM
 		
 		//You can programmatically query Biomart
-		Document result = QueryBioMart.createQuery("hsapiens_gene_ensembl", "TSV" );
+		String organims = "hsapiens_gene_ensembl";
+		String externalSource = "mim_gene_accession";
+		Document result = QueryBioMart.createQuery(organims,externalSource, "TSV" );
 		InputStream is = QueryBioMart.getDataStream(result);
 		String inputStream = QueryBioMart.getStringFromInputStream(is);
 		
@@ -39,7 +42,7 @@ public class BioMart2Bdb {
 		fileWriter.close();		
 		
 		
-		//You can also provide directly a tsv file download manually 
+		//You can also provide directly the path of a tsv file download manually 
 		//		String name = "mart_export.txt";
 		
 		//Then parse the file and create the database
@@ -63,7 +66,6 @@ public class BioMart2Bdb {
 				// in this example we parse a Ensembl -> OMIM file
 				DataSource ds = DataSource.getExistingBySystemCode("Om"); // TODO recognize automatically the external source
 				
-				System.out.println(split[0]);
 				Xref xref = new Xref(split[1],ds);
 				if (!dbEntries.containsKey(split[0])) {
 					ArrayList<Xref> database = new ArrayList<Xref>();
@@ -80,10 +82,9 @@ public class BioMart2Bdb {
 		return dbEntries;
 	}
 
-	public static void bridgedbCreator(HashMap<Xref, List<Xref>> dbEntries, String name) throws IDMapperException, ClassNotFoundException{
-
-
-
+	public static void bridgedbCreator(HashMap<Xref, List<Xref>> dbEntries, String name) 
+			throws IDMapperException, ClassNotFoundException{
+		
 		BridgeDbCreator creator = new BridgeDbCreator(dbEntries);
 
 		creator.setOutputFilePath(name);
