@@ -27,8 +27,6 @@ public class BioMart2Bdb {
 	private HashMap<Xref, HashSet<Xref>>  dbEntries = new HashMap<Xref, HashSet<Xref>>();	
 	private HashMap<Xref, GeneAttributes>  geneSet = new HashMap<Xref, GeneAttributes>();
 	private SpeciesConfiguration config;
-//	private static String path = "/home/bigcat-jonathan/LinkTest/derby_test/";
-//	private static String pathOld = "/home/bigcat-jonathan/LinkTest/derby_old/";
 	
 	
 	public BioMart2Bdb(SpeciesConfiguration config,BioMartAttributes bio,HashMap<Xref, 
@@ -38,82 +36,7 @@ public class BioMart2Bdb {
 		this.dbEntries=dbEntries;
 		this.geneSet=geneSet;
 	}
-	/*
-	public static void main(String[] args) throws ClassNotFoundException, IDMapperException, IOException {
-		DataSourceTxt.init(); //Initialize BrideDb data source
-
-		//You can programmatically query Biomart
-		Date date = new Date();	
-		System.out.println(date);
-		
-		bio = new BioMartAttributes();
-		bio.init();
-		
-//		String filename = "config.properties";
-		String filename = "BosTaurus.config";
-//		String filename = "Canisfamiliaris.config";
-//		String filename = "Daniorerio.config";
-//		String filename = "Drosophilamelanogaster.config";
-//		String filename = "EquusCaballus.config";
-//		String filename = "GallusGallus.config";
-//		String filename = "PanTroglodytes.config";
-//		String filename = "RattusNorvegicus.config";
-//		String filename = "SaccharomycesCerevisiae.config";
-//		String filename = "SusScrofa.config";
-//		String filename = "XenopusTropicalis.config";
-//		String filename = "HomoSapiens.config";
-//		String filename = "MusMusculus.config";
-		
-//		String filename = "ArabidopsisThaliana.config";
-//		String filename = "GlycineMax.config";
-//		String filename = "HordeumVulgare.config";
-//		String filename = "OryzaSativaJaponica.config";
-//		String filename = "PopulusTrichocarpa.config";
-//		String filename = "SolanumLycopersicum.config";
-//		String filename = "VitisVinifera.config";
-//		String filename = "ZeaMays.config";		
-		
-//		String filename = "AnophelesGambiae.config";
-		
-//		String filename = "PlasmodiumFalciparum.config";
-		
-		config = new SpeciesConfiguration(filename);
-		
-		List<String> filter = config.filterDatasource(config.getDatasource(),bio);
-		
-		String organism = config.getSpecies();
-		QueryBioMart.martAttributes(bio,organism,config.getEndpoint());
-
-		for (String probe:config.getProbe()){
-			for(BioMartReference ref :bio.getReference(probe)){
-				System.out.println(ref.getQueryName());
-				query(organism,ref.getQueryName(),true);
-			}
-		}
-
-		for (String probe:filter){
-			query(organism,probe,true);
-		}
-
-		date = new Date();	
-		System.out.println(date);
-
-		bridgedbCreator(dbEntries,geneSet,config.getFileName());
-
-		date = new Date();	
-		System.out.println(date);
-		
-		BridgeQC main = new BridgeQC (new File(pathOld
-				+config.getSpecies().toUpperCase().charAt(0)
-				+config.getSpecies().charAt(1)
-				+"_Derby_20130701.bridge"),
-				new File(path+config.getFileName()+".bridge"));
-		try {
-			main.run();
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
-	}*/
+	
 	
 	public void query(String organism, String externalSource,Boolean attributes){
 		Document result = QueryBioMart.createQuery(organism,externalSource, config.getSchema(),attributes);
@@ -145,18 +68,15 @@ public class BioMart2Bdb {
 				split = line.split("\t");
 				Xref mainXref = new Xref(split[0], DataSource.getExistingBySystemCode("En"));
 				if (split.length>1){ // only parse if there is a external reference in this Ensembl id
-
 					Xref xref = new Xref(split[1],ds);
 					GeneAttributes gene = new GeneAttributes(split[2], split[3], split[4], split[5]);
 					geneSet.put(mainXref, gene);
 					geneSet.put(xref, gene);
 					HashSet<Xref> xrefSet = dbEntries.get(mainXref);
-
 					if (xrefSet==null){
 						HashSet<Xref> database = new HashSet<Xref>();
 						database.add(xref);
 						dbEntries.put(mainXref, database);
-
 					}
 					else{
 						xrefSet.add(xref);

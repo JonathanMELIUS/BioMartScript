@@ -15,7 +15,6 @@ import org.bridgedb.bio.DataSourceTxt;
 public class SpeciesConfiguration {
 	Properties prop;
 	InputStream input;
- //	String filename;
 //	static String includeList = "En,Mb,L,X,Il,Ag,Q,Om,U,Rf,S,Ip,T,Pd,H,M,R,D,Z,F,W,Gg,A,Ti,Ir,N,Uc,Pl,Gm,Bg,Ec,Wg,Gw,Kg,Bc,Tb";
 	static String includeList = "Ensembl,miRBase Sequence,Entrez Gene,Affy,Illumina,Agilent,RefSeq,OMIM,"
 			+ "UniGene,Rfam,Uniprot-TrEMBL,IPI,GeneOntology,PDB,HGNC,MGI,RGD,SGD,ZFIN,FlyBase,WormBase,Gramene Genes DB,"
@@ -23,21 +22,13 @@ public class SpeciesConfiguration {
 			+ "BioCyc,TubercuList,Uniprot-SwissProt";
 	public SpeciesConfiguration(String filename){
 		prop = new Properties();
-//		input = null;
-//		this.filename = filename;
-//		input = SpeciesConfiguration.class.getClassLoader().getResourceAsStream("resource/"+filename);
-//		input = SpeciesConfiguration.class.getClassLoader().getResourceAsStream(filename);
+
 		try {
 			input = new FileInputStream(filename);
 		} catch (FileNotFoundException e1) {
 			e1.printStackTrace();
 			System.out.println("Sorry, unable to find " + filename);
 		}
-//		if(input==null){
-//			System.out.println("Sorry, unable to find " + filename);
-//			return;
-//		}
-
 		//load a properties file from class path, inside static method
 		try {
 			prop.load(input);
