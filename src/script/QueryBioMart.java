@@ -21,9 +21,7 @@ import org.w3c.dom.ls.DOMImplementationLS;
 import org.w3c.dom.ls.LSOutput;
 import org.w3c.dom.ls.LSSerializer;
 
-public class QueryBioMart {
-//	private static String biomart = "http://grch37.ensembl.org/biomart/martservice/result?query=" ; 
-	private static String biomart = "http://ensembl.org/biomart/martservice/result?query=" ; 
+public class QueryBioMart {	
 	public static String docToString(Document xml) {
 		LSSerializer ls =  ((DOMImplementationLS) xml.getImplementation()).createLSSerializer();
 		LSOutput lsOut = ((DOMImplementationLS) xml.getImplementation()).createLSOutput();
@@ -34,11 +32,11 @@ public class QueryBioMart {
 		return stringWriter.toString();
 	}
 	
-	public static InputStream getDataStream(Document xml) {
+	public static InputStream getDataStream(Document xml, String endpoint) {
 		try {
 			String encodedXml = docToString(xml);
 			encodedXml = URLEncoder.encode(encodedXml, "UTF-8"); // encode to url
-			URL url = new URL(biomart + encodedXml);
+			URL url = new URL(endpoint+"martservice/result?query=" + encodedXml);
 
 			System.out.println("Biomart query URL: " + url.toString());
 
@@ -57,7 +55,6 @@ public class QueryBioMart {
 	}
 	
 	public static String getStringFromInputStream(InputStream is) {
-
 		int count = 0;
 		BufferedReader br = null;
 		StringBuilder sb = new StringBuilder();
@@ -88,7 +85,7 @@ public class QueryBioMart {
 			return sb.toString();
 		}
 	}
-	public static Document createQuery(String organism, String externalSource, String format) {
+	public static Document createQuery(String organism, String externalSource, String schema,Boolean attributes) {
 		try {
 			DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
 			DocumentBuilder docBuilder = dbf.newDocumentBuilder();
@@ -96,21 +93,23 @@ public class QueryBioMart {
 			// create doc
 			Document query = docBuilder.newDocument();
 			DOMImplementation domImpl = query.getImplementation();
+			
+			/* specify the parameters to use */
 			DocumentType doctype = domImpl.createDocumentType("Query", "", "");
 			query.appendChild(doctype);
 			Element root = query.createElement("Query");
 			root.setAttribute("client", "true");
-			root.setAttribute("formatter", format);
-			root.setAttribute("limit", "-1");
+			root.setAttribute("formatter", "TSV");
+			root.setAttribute("virtualSchemaName",schema);
 			root.setAttribute("header", "1");
-			root.setAttribute("uniqueRows", "0" );
+			root.setAttribute("uniqueRows", "1" );
+			root.setAttribute("count", "" );
+			root.setAttribute("datasetConfigVersion", "0.6" );
 			query.appendChild(root);
 
 			/* specify the dataset to use */
 			Element dataset = query.createElement("Dataset");
 			dataset.setAttribute("name", organism);
-
-			//dataset.setAttribute("config", "gene_ensembl_config");
 			root.appendChild(dataset);
 
 			/* add attributes specified in app */
@@ -121,12 +120,80 @@ public class QueryBioMart {
 			gene_id = query.createElement("Attribute");
 			gene_id.setAttribute("name",externalSource);
 			dataset.appendChild(gene_id);
-
+			
+			if (attributes){
+			gene_id = query.createElement("Attribute");
+			gene_id.setAttribute("name","description");
+			dataset.appendChild(gene_id);
+			gene_id = query.createElement("Attribute");
+			gene_id.setAttribute("name","chromosome_name");
+			dataset.appendChild(gene_id);			
+			gene_id = query.createElement("Attribute");	
+			// Difference between the main Ensembl or the others(Plants...)
+			if (schema.equals("default"))
+				gene_id.setAttribute("name","external_gene_name");
+			else
+				gene_id.setAttribute("name","external_gene_id");
+			dataset.appendChild(gene_id);
+			gene_id = query.createElement("Attribute");
+			gene_id.setAttribute("name","gene_biotype");
+			dataset.appendChild(gene_id);
+			}
 			return query;
 
 		} catch (ParserConfigurationException e) {
 			e.printStackTrace();
 		}
 		return null; 
+	}
+	public static void martAttributes(BioMartAttributes bio, String organims,String endpoint ){
+		
+		String biomart = endpoint+"martservice?type=attributes&dataset="+organims;
+	
+		String extProbe = organims+"__eFG";
+
+		InputStream is = null;
+		try {
+			URL url = new URL(biomart );
+
+			System.out.println("Biomart query URL: " + url.toString());
+
+			HttpURLConnection urlc = (HttpURLConnection) url.openConnection();
+			urlc.setDoOutput(true);
+			int code = urlc.getResponseCode();
+			if(code != 200) {
+				System.out.println("HTTP Response code: " + urlc.getResponseCode());
+			}
+			is = urlc.getInputStream();
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		BufferedReader br = null;
+		String line;
+
+		try {
+			br = new BufferedReader(new InputStreamReader(is));
+			while ((line = br.readLine()) != null) {
+				if ( line.contains(extProbe) || line.contains("efg")  ){
+					String[] split = line.split("\t");
+					if (split[1].contains("Affy")){
+						BioMartReference ref = new BioMartReference(split[0], split[1], "Affy");
+						bio.addReference(ref);
+					}
+					if (split[1].contains("Agilent")){
+						BioMartReference ref = new BioMartReference(split[0], split[1], "Agilent");
+						bio.addReference(ref);
+					}
+					if (split[1].contains("Illumina")){
+						BioMartReference ref = new BioMartReference(split[0], split[1], "Illumina");
+						bio.addReference(ref);
+					}
+				}					
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 }

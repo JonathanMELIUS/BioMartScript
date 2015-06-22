@@ -1,15 +1,16 @@
 package script;
 
 import java.io.BufferedReader;
-import java.io.FileOutputStream;
-import java.io.FileReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.PrintWriter;
-import java.util.ArrayList;
+import java.io.InputStreamReader;
+import java.sql.SQLException;
+import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 
 import org.bridgedb.DataSource;
 import org.bridgedb.IDMapperException;
@@ -17,90 +18,196 @@ import org.bridgedb.Xref;
 import org.bridgedb.bio.DataSourceTxt;
 import org.bridgedb.creator.BridgeDbCreator;
 import org.bridgedb.creator.DbBuilder;
+import org.bridgedb.tools.qc.BridgeQC;
 import org.w3c.dom.Document;
 
 public class BioMart2Bdb {
 
-
+	private BioMartAttributes bio;
+	private HashMap<Xref, HashSet<Xref>>  dbEntries = new HashMap<Xref, HashSet<Xref>>();	
+	private HashMap<Xref, GeneAttributes>  geneSet = new HashMap<Xref, GeneAttributes>();
+	private SpeciesConfiguration config;
+//	private static String path = "/home/bigcat-jonathan/LinkTest/derby_test/";
+//	private static String pathOld = "/home/bigcat-jonathan/LinkTest/derby_old/";
+	
+	
+	public BioMart2Bdb(SpeciesConfiguration config,BioMartAttributes bio,HashMap<Xref, 
+			HashSet<Xref>>  dbEntries,HashMap<Xref, GeneAttributes>  geneSet){
+		this.config=config;
+		this.bio=bio;
+		this.dbEntries=dbEntries;
+		this.geneSet=geneSet;
+	}
+	/*
 	public static void main(String[] args) throws ClassNotFoundException, IDMapperException, IOException {
-		// TODO Auto-generated method stub
 		DataSourceTxt.init(); //Initialize BrideDb data source
-		
-		//In this example, we query for the mapping between Ensembl -> OMIM
-		
+
 		//You can programmatically query Biomart
-		String organims = "hsapiens_gene_ensembl";
-		String externalSource = "mim_gene_accession";
-		Document result = QueryBioMart.createQuery(organims,externalSource, "TSV" );
-		InputStream is = QueryBioMart.getDataStream(result);
-		String inputStream = QueryBioMart.getStringFromInputStream(is);
+		Date date = new Date();	
+		System.out.println(date);
 		
-		String name = "biomart.txt";
-		OutputStream ttl = new FileOutputStream(name);
-		PrintWriter fileWriter = new PrintWriter(ttl);
-		fileWriter.println(inputStream);
-		fileWriter.close();		
+		bio = new BioMartAttributes();
+		bio.init();
 		
+//		String filename = "config.properties";
+		String filename = "BosTaurus.config";
+//		String filename = "Canisfamiliaris.config";
+//		String filename = "Daniorerio.config";
+//		String filename = "Drosophilamelanogaster.config";
+//		String filename = "EquusCaballus.config";
+//		String filename = "GallusGallus.config";
+//		String filename = "PanTroglodytes.config";
+//		String filename = "RattusNorvegicus.config";
+//		String filename = "SaccharomycesCerevisiae.config";
+//		String filename = "SusScrofa.config";
+//		String filename = "XenopusTropicalis.config";
+//		String filename = "HomoSapiens.config";
+//		String filename = "MusMusculus.config";
 		
-		//You can also provide directly the path of a tsv file download manually 
-		//		String name = "mart_export.txt";
+//		String filename = "ArabidopsisThaliana.config";
+//		String filename = "GlycineMax.config";
+//		String filename = "HordeumVulgare.config";
+//		String filename = "OryzaSativaJaponica.config";
+//		String filename = "PopulusTrichocarpa.config";
+//		String filename = "SolanumLycopersicum.config";
+//		String filename = "VitisVinifera.config";
+//		String filename = "ZeaMays.config";		
 		
-		//Then parse the file and create the database
-		HashMap<Xref, List<Xref>>  dbEntries = new HashMap<Xref, List<Xref>>();		
-		parseFile(dbEntries,name);
-		bridgedbCreator(dbEntries,"testBDB");
+//		String filename = "AnophelesGambiae.config";
+		
+//		String filename = "PlasmodiumFalciparum.config";
+		
+		config = new SpeciesConfiguration(filename);
+		
+		List<String> filter = config.filterDatasource(config.getDatasource(),bio);
+		
+		String organism = config.getSpecies();
+		QueryBioMart.martAttributes(bio,organism,config.getEndpoint());
+
+		for (String probe:config.getProbe()){
+			for(BioMartReference ref :bio.getReference(probe)){
+				System.out.println(ref.getQueryName());
+				query(organism,ref.getQueryName(),true);
+			}
+		}
+
+		for (String probe:filter){
+			query(organism,probe,true);
+		}
+
+		date = new Date();	
+		System.out.println(date);
+
+		bridgedbCreator(dbEntries,geneSet,config.getFileName());
+
+		date = new Date();	
+		System.out.println(date);
+		
+		BridgeQC main = new BridgeQC (new File(pathOld
+				+config.getSpecies().toUpperCase().charAt(0)
+				+config.getSpecies().charAt(1)
+				+"_Derby_20130701.bridge"),
+				new File(path+config.getFileName()+".bridge"));
+		try {
+			main.run();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}*/
+	
+	public void query(String organism, String externalSource,Boolean attributes){
+		Document result = QueryBioMart.createQuery(organism,externalSource, config.getSchema(),attributes);
+		InputStream is = QueryBioMart.getDataStream(result,config.getEndpoint());
+		BufferedReader br = new BufferedReader(new InputStreamReader(is));
+
+		try {
+			parse(br);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 
-	public static HashMap<Xref, List<Xref>> parseFile(HashMap<Xref, List<Xref>> dbEntries, String name) throws IOException{
-		BufferedReader br = new BufferedReader(new FileReader(name));
+	public void parse(BufferedReader br) throws IOException{
 
 		String line = br.readLine();
-		line = br.readLine(); //Skip the header 
-
-		String[] split;		
-
-		while (line != null) {	
-			split = line.split("\t");
-			Xref mainXref = new Xref(split[0], DataSource.getExistingBySystemCode("En"));
-			if (split.length>1){ // only parse if there is a external reference in this Ensembl id
-				// in this example we parse a Ensembl -> OMIM file
-				DataSource ds = DataSource.getExistingBySystemCode("Om"); // TODO recognize automatically the external source
-				
-				Xref xref = new Xref(split[1],ds);
-				if (!dbEntries.containsKey(split[0])) {
-					ArrayList<Xref> database = new ArrayList<Xref>();
-					database.add(xref);
-					dbEntries.put(mainXref, database);
-				}
-				else{					
-					dbEntries.get(mainXref).add(xref);
-				}
+		String[] split = line.split("\t");
+		DataSource ds=null;
+		try{
+			if (split[1].equals("UniProt/SwissProt Accession") 
+				|| split[1].equals("UniProtKB/SwissProt ID")
+				|| split[1].equals("UniProt/SwissProt ID")){
+				split[1]="UniProt/TrEMBL Accession";
 			}
-			line = br.readLine();
+			System.out.println(split[1]);
+			ds = DataSource.getExistingByFullName(bio.getReference(split[1]).get(0).getGpmlName());
+			line = br.readLine(); //Skip the header
+			while (line != null) {	
+				split = line.split("\t");
+				Xref mainXref = new Xref(split[0], DataSource.getExistingBySystemCode("En"));
+				if (split.length>1){ // only parse if there is a external reference in this Ensembl id
+
+					Xref xref = new Xref(split[1],ds);
+					GeneAttributes gene = new GeneAttributes(split[2], split[3], split[4], split[5]);
+					geneSet.put(mainXref, gene);
+					geneSet.put(xref, gene);
+					HashSet<Xref> xrefSet = dbEntries.get(mainXref);
+
+					if (xrefSet==null){
+						HashSet<Xref> database = new HashSet<Xref>();
+						database.add(xref);
+						dbEntries.put(mainXref, database);
+
+					}
+					else{
+						xrefSet.add(xref);
+					}
+				}
+				line = br.readLine();
+			}
+		}
+		catch (ArrayIndexOutOfBoundsException ae){
+			System.err.println("Incorrect datasource	"+split[0]);			
 		}
 		br.close();
-		return dbEntries;
 	}
 
-	public static void bridgedbCreator(HashMap<Xref, List<Xref>> dbEntries, String name) 
-			throws IDMapperException, ClassNotFoundException{
-		
+	public void bridgedbCreator(Map<Xref, HashSet<Xref>> dbEntries,
+			Map<Xref, GeneAttributes>  geneSet,String path, String name) 
+					throws IDMapperException, ClassNotFoundException{
+
 		BridgeDbCreator creator = new BridgeDbCreator(dbEntries);
 
-		creator.setOutputFilePath(name);
+		creator.setOutputFilePath(path+name);
 		creator.setDbSourceName("Ensembl");
 		creator.setDbVersion("0.1");
-		creator.setDbSeries("Homo sapiens genes and proteins");
+		creator.setDbSeries(config.getDBName());
 		creator.setDbDataType("GeneProduct");
 
 		DbBuilder dbBuilder = new DbBuilder(creator);
 		dbBuilder.createNewDb();
 
-		dbBuilder.addEntry(dbEntries);
+		dbBuilder.addEntry(dbEntries,geneSet);
 
 		dbBuilder.finalizeDb();
 
 		System.out.println(dbBuilder.getError()+" errors (duplicates) occurred"+ dbBuilder.getErrorString());
 	}
-
+	public HashMap<Xref, HashSet<Xref>> getDbEntries() {
+		return dbEntries;
+	}
+	public void setDbEntries(HashMap<Xref, HashSet<Xref>> dbEntries) {
+		this.dbEntries = dbEntries;
+	}
+	public BioMartAttributes getBio() {
+		return bio;
+	}
+	public void setBio(BioMartAttributes bio) {
+		this.bio = bio;
+	}
+	public HashMap<Xref, GeneAttributes> getGeneSet() {
+		return geneSet;
+	}
+	public void setGeneSet(HashMap<Xref, GeneAttributes> geneSet) {
+		this.geneSet = geneSet;
+	}
 }
