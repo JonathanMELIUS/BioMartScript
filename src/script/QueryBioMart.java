@@ -85,7 +85,8 @@ public class QueryBioMart {
 			return sb.toString();
 		}
 	}
-	public static Document createQuery(String organism, String externalSource, String schema,Boolean attributes) {
+	public static Document createQuery(String organism, String externalSource, 
+			String schema,String chrFilter ,Boolean attributes,Boolean filter) {
 		try {
 			DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
 			DocumentBuilder docBuilder = dbf.newDocumentBuilder();
@@ -111,7 +112,14 @@ public class QueryBioMart {
 			Element dataset = query.createElement("Dataset");
 			dataset.setAttribute("name", organism);
 			root.appendChild(dataset);
-
+			
+			if (filter){
+				Element chr = query.createElement("Filter");
+				chr.setAttribute("name", "chromosome_name");
+				chr.setAttribute("value", chrFilter);
+				dataset.appendChild(chr);
+			}
+			
 			/* add attributes specified in app */
 			Element gene_id = query.createElement("Attribute");
 			gene_id.setAttribute("name", "ensembl_gene_id");
@@ -146,7 +154,7 @@ public class QueryBioMart {
 		}
 		return null; 
 	}
-	public static void martAttributes(BioMartAttributes bio, String organims,String endpoint ){
+	public static void loadBiomartAttributes(BioMartAttributes bio, String organims,String endpoint ){
 		
 		String biomart = endpoint+"martservice?type=attributes&dataset="+organims;
 	

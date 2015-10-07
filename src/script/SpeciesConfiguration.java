@@ -9,9 +9,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 
-import org.bridgedb.DataSource;
-import org.bridgedb.bio.DataSourceTxt;
-
 public class SpeciesConfiguration {
 	Properties prop;
 	InputStream input;
@@ -22,7 +19,7 @@ public class SpeciesConfiguration {
 			+ "BioCyc,TubercuList,Uniprot-SwissProt";
 	public SpeciesConfiguration(String filename){
 		prop = new Properties();
-
+//		prop.stringPropertyNames();
 		try {
 			input = new FileInputStream(filename);
 		} catch (FileNotFoundException e1) {
@@ -43,11 +40,7 @@ public class SpeciesConfiguration {
 				}
 			}
 		}
-	}
-	public List<String> getProbeSet(){
-		List<String> probe = Arrays.asList(prop.getProperty("probe_set").split(","));
-		return probe;
-	}
+	}	
 	public String getEndpoint(){
 		return prop.getProperty("endpoint");
 	}
@@ -67,11 +60,18 @@ public class SpeciesConfiguration {
 		List<String> probe = Arrays.asList(prop.getProperty("probe_datasource").split(","));
 		return probe;
 	}
+	public List<String> getProbeSet(){
+		List<String> probe = Arrays.asList(prop.getProperty("probe_set").split(","));
+		return probe;
+	}
 	public List<String> getDatasource(){
 		List<String> probe = Arrays.asList(prop.getProperty("gene_datasource").split(","));
 		return probe;
 	}
-	
+	public String  getChromosome(){
+//		List<String> chr = Arrays.asList(prop.getProperty("chromosome_name").split(","));
+		return prop.getProperty("chromosome_name");
+	}
 	public List<String> filterDatasource(List<String> list,BioMartAttributes bio){
 		List<String> filter = new ArrayList<String>();
 		List<String> arr = Arrays.asList(includeList.split(","));

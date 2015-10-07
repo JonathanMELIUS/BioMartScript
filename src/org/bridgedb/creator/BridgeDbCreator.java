@@ -20,6 +20,7 @@ package org.bridgedb.creator;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -38,7 +39,7 @@ public class BridgeDbCreator {
 	private String outputFilePath;
 	private List<DataSource> datasources;
 	
-	private Map<Xref, List<Xref>> dbEntries;
+	private Map<Xref, HashSet<Xref>> dbEntries;
 
 	private String dbVersion;
 	private String dbSeries;
@@ -46,9 +47,9 @@ public class BridgeDbCreator {
 	private String dbDataType;
 
 	// Constructor
-	public BridgeDbCreator(HashMap<Xref, List<Xref>> db) {
+	public BridgeDbCreator(Map<Xref, HashSet<Xref>> dbEntries) {
 		datasources = new ArrayList<DataSource>();
-		dbEntries = db;		
+		this.dbEntries = dbEntries;		
 	}
 
 	public File getInputFile() {
@@ -90,10 +91,10 @@ public class BridgeDbCreator {
 	public void setDbDataType(String dbDataType) {
 		this.dbDataType = dbDataType;
 	}
-	public Map<Xref, List<Xref>> getDbEntries() {
+	public Map<Xref, HashSet<Xref>> getDbEntries() {
 		return dbEntries;
 	}
-	public void setDbEntries(Map<Xref, List<Xref>> dbEntries) {
+	public void setDbEntries(Map<Xref, HashSet<Xref>> dbEntries) {
 		this.dbEntries = dbEntries;
 	}
 }

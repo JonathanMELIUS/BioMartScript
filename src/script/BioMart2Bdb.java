@@ -1,24 +1,18 @@
 package script;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.sql.SQLException;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 
 import org.bridgedb.DataSource;
 import org.bridgedb.IDMapperException;
 import org.bridgedb.Xref;
-import org.bridgedb.bio.DataSourceTxt;
 import org.bridgedb.creator.BridgeDbCreator;
 import org.bridgedb.creator.DbBuilder;
-import org.bridgedb.tools.qc.BridgeQC;
 import org.w3c.dom.Document;
 
 public class BioMart2Bdb {
@@ -27,19 +21,49 @@ public class BioMart2Bdb {
 	private HashMap<Xref, HashSet<Xref>>  dbEntries = new HashMap<Xref, HashSet<Xref>>();	
 	private HashMap<Xref, GeneAttributes>  geneSet = new HashMap<Xref, GeneAttributes>();
 	private SpeciesConfiguration config;
-	
-	
+
+
 	public BioMart2Bdb(SpeciesConfiguration config,BioMartAttributes bio,HashMap<Xref, 
 			HashSet<Xref>>  dbEntries,HashMap<Xref, GeneAttributes>  geneSet){
 		this.config=config;
 		this.bio=bio;
 		this.dbEntries=dbEntries;
 		this.geneSet=geneSet;
+
 	}
-	
-	
-	public void query(String organism, String externalSource,Boolean attributes){
-		Document result = QueryBioMart.createQuery(organism,externalSource, config.getSchema(),attributes);
+
+	//	public void launch(){
+	//		Date date = new Date();	
+	//		System.out.println(date);
+	//
+	//	
+	//		bio.init();
+	//
+	//		BioMart2Bdb mart = new BioMart2Bdb(config,bio,dbEntries,geneSet);
+	//		List<String> filter = config.filterDatasource(config.getDatasource(),bio);
+	//
+	//		String organism = config.getSpecies();
+	//		QueryBioMart.martAttributes(bio,organism,config.getEndpoint());
+	//
+	//		for (String probe:config.getProbeSet()){
+	//			mart.query(organism,probe,true);
+	//		}
+	//
+	//		for (String ds:filter){
+	//			mart.query(organism,ds,true);
+	//		}
+	//
+	//		System.out.println(date);
+	//
+	//		mart.bridgedbCreator(dbEntries,geneSet,path,config.getFileName());
+	//
+	//		System.out.println(date);
+	//		
+	//	}
+
+
+	public void query(String organism, String externalSource,String chrFilter,Boolean attributes,Boolean filter){
+		Document result = QueryBioMart.createQuery(organism,externalSource, config.getSchema(),chrFilter,attributes,filter);
 		InputStream is = QueryBioMart.getDataStream(result,config.getEndpoint());
 		BufferedReader br = new BufferedReader(new InputStreamReader(is));
 
@@ -57,8 +81,8 @@ public class BioMart2Bdb {
 		DataSource ds=null;
 		try{
 			if (split[1].equals("UniProt/SwissProt Accession") 
-				|| split[1].equals("UniProtKB/SwissProt ID")
-				|| split[1].equals("UniProt/SwissProt ID")){
+					|| split[1].equals("UniProtKB/SwissProt ID")
+					|| split[1].equals("UniProt/SwissProt ID")){
 				split[1]="UniProt/TrEMBL Accession";
 			}
 			System.out.println(split[1]);
@@ -67,7 +91,8 @@ public class BioMart2Bdb {
 			while (line != null) {	
 				split = line.split("\t");
 				Xref mainXref = new Xref(split[0], DataSource.getExistingBySystemCode("En"));
-				if (split.length>1){ // only parse if there is a external reference in this Ensembl id
+				//				if (split.length>1){ // only parse if there is a external reference in this Ensembl id
+				if (split[1].length()>1){ // only parse if there is a external reference in this Ensembl id
 					Xref xref = new Xref(split[1],ds);
 					GeneAttributes gene = new GeneAttributes(split[2], split[3], split[4], split[5]);
 					geneSet.put(mainXref, gene);
@@ -80,6 +105,12 @@ public class BioMart2Bdb {
 					}
 					else{
 						xrefSet.add(xref);
+					}
+				}
+				else{
+					if (!dbEntries.containsKey(mainXref)){
+						HashSet<Xref> database = new HashSet<Xref>();
+						dbEntries.put(mainXref, database);
 					}
 				}
 				line = br.readLine();
