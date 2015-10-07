@@ -1,22 +1,19 @@
 package script;
 
+
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.HttpURLConnection;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.FilenameFilter;
 import java.io.IOException;
-import java.io.OutputStream;
+import java.io.InputStream;
 import java.io.PrintWriter;
-import java.io.Reader;
-import java.io.UnsupportedEncodingException;
 
 import org.bridgedb.DataSource;
 import org.bridgedb.IDMapperException;
@@ -25,10 +22,13 @@ import org.bridgedb.bio.DataSourceTxt;
 import org.bridgedb.creator.BridgeDbCreator;
 import org.bridgedb.creator.DbBuilder;
 import org.bridgedb.tools.qc.BridgeQC;
+import org.pathvisio.core.model.ConverterException;
 import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
 import org.w3c.dom.Node;
 import org.w3c.dom.Element;
+import org.wikipathways.reportbots.OutdatedIdsReport;
+import org.xml.sax.SAXException;
 
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.DocumentBuilder;
@@ -41,120 +41,77 @@ public class EnsemblREST {
 	public static void main(String[] args) throws Exception {
 		DataSourceTxt.init(); //Initialize BrideDb data source
 
-		//http://rest.ensemblgenomes.org/lookup/genome/escherichia_coli_str_k_12_substr_mg1655?content-type=application/json&xrefs=1&level=translation
-		String server = "http://rest.ensemblgenomes.org";
-		//		String ext = "/lookup/genome/campylobacter_jejuni_subsp_jejuni_bh_01_0142?";
-		//		String ext = "/lookup/genome/campylobacter_jejuni_subsp_jejuni_bh_01_0142?xrefs=1&level=translation";
-		//		String ext = "/lookup/genome/escherichia_coli_str_k_12_substr_mg1655?xrefs=1&level=translation";
-		//		String ext = "/lookup/genome/mycobacterium_tuberculosis_h37rv?xrefs=1&level=translation";
-		String ext = "/lookup/genome/bacillus_subtilis_bsn5?xrefs=1&level=translation";
-		URL url = new URL(server + ext);
+		File dir = new File (args[0]);
+		String path = args[1];
+		String pathOld = null;
+		Boolean qc = false;
+		if (args.length>2){
+			pathOld = args[2];
+			qc = true;
+		}
+		if (dir.isDirectory()){
+			FilenameFilter textFilter = new FilenameFilter() {
+				public boolean accept(File dir, String name) {
+					String lowercaseName = name.toLowerCase();
+					if (lowercaseName.endsWith(".bactconfig")) {
+						return true;
+					} else {
+						return false;
+					}
+				}
+			};
+			File[] listFiles = dir.listFiles(textFilter);
 
-//		URLConnection connection = url.openConnection();
-//		HttpURLConnection httpConnection = (HttpURLConnection)connection;
-//
-//		//		httpConnection.setRequestProperty("Content-Type", "application/json");
-//		httpConnection.setRequestProperty("Content-Type", "text/xml");
-//
-//
-//		InputStream response = connection.getInputStream();
-//		int responseCode = httpConnection.getResponseCode();
-//
-//		if(responseCode != 200) {
-//			throw new RuntimeException("Response code was not 200. Detected response was "+responseCode);
-//		}
-
-
-
-		File fXmlFile = new File("mapping_ec.xml");
-		DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
-		DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
-		//		Document doc = dBuilder.parse(fXmlFile);
-		//		Document doc = dBuilder.parse(response);
-		doc = dBuilder.parse(fXmlFile);
-//		doc = dBuilder.parse(response);
-		doc.getDocumentElement().normalize();
-		
-		parseXrefs();
-		bdbCreate();
-		
-		
-		//		NodeList nList = doc.getElementsByTagName("data");
-		//		System.out.println(nList.getLength());
-		//		System.out.println("Root element :" + doc.getDocumentElement().getNodeName());
-		//Contains the mapping from Ensembl to external database
-		//		HashMap<Xref, HashSet<Xref>>  dbEntries = new HashMap<Xref, HashSet<Xref>>();	
-		//Contains the gene attributes of the Ensembl gene id
-		//		HashMap<Xref, GeneAttributes>  geneSet = new HashMap<Xref, GeneAttributes>();	
-	}
-
-	public static void writeXML(InputStream response) throws ParserConfigurationException, IOException{
-		String output;
-		Reader reader = null;
-
-		DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
-		DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
-		Document doc;
-		try {
-			reader = new BufferedReader(new InputStreamReader(response, "UTF-8"));
-
-
-			File targetFile = new File("mapping_bs2.xml");
-			OutputStream outStream = new FileOutputStream(targetFile);
-			int read = 0;
-			byte[] bytes = new byte[1024];
-
-			while ((read = response.read(bytes)) != -1) {
-				outStream.write(bytes, 0, read);
-			}
-			outStream.close();
-			System.out.println("Done!");
-
-			//			doc = dBuilder.parse(response);
-
-			//			StringBuilder builder = new StringBuilder();
-			//			char[] buffer = new char[8192];
-			//			int read;
-			//			while ((read = reader.read(buffer, 0, buffer.length)) > 0) {
-			//				builder.append(buffer, 0, read);
-			//			}
-			//			output = builder.toString();
-		} 
-		finally {
-
-			if (reader != null) try {
-				reader.close(); 
-			} catch (IOException logOrIgnore) {
-				logOrIgnore.printStackTrace();
+			for(File f : listFiles){
+				SpeciesConfiguration config = new SpeciesConfiguration(f.getAbsolutePath());
+				queryXml(config);
+				parseXrefs();
+				bdbCreate(path,pathOld,config);
+				report(qc,pathOld,path,config);
 			}
 		}
-
-		//		System.out.println(output);
+		else{
+			SpeciesConfiguration config = new SpeciesConfiguration(dir.getAbsolutePath());
+			queryXml(config);
+			parseXrefs();
+			bdbCreate(path,pathOld,config);
+			report(qc,pathOld,path,config);
+		}		
+	}
+	public static void queryXml(SpeciesConfiguration config) 
+			throws IOException, ParserConfigurationException, SAXException{
+		String server = "http://rest.ensemblgenomes.org";
+		String ext = "/lookup/genome/"+config.getSpecies()+"?xrefs=1&level=translation";
+		URL url = new URL(server + ext);
+		
+		
+		URLConnection connection = url.openConnection();
+		HttpURLConnection httpConnection = (HttpURLConnection)connection;
+		httpConnection.setRequestProperty("Content-Type", "text/xml");
+		InputStream response = connection.getInputStream();
+		int responseCode = httpConnection.getResponseCode();
+		if(responseCode != 200) {
+			throw new RuntimeException("Response code was not 200. Detected response was "+responseCode);
+		}
+		
+		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+		DocumentBuilder db = dbf.newDocumentBuilder();
+		doc = db.parse(response);
+		doc.getDocumentElement().normalize();
 	}
 	public static void parseXrefs(){
 		NodeList aList = doc.getElementsByTagName("xrefs");
-		for (int atemp = 0; atemp < aList.getLength(); atemp++) {	 //aList.getLength()
+		for (int atemp = 0; atemp < aList.getLength(); atemp++) {
 			Node aNode = aList.item(atemp);
-
-			//			System.out.println("\nCurrent Element :" + aNode.getNodeName());
-			//			System.out.println("\n Parent : "+aNode.getParentNode().getNodeName());
 			if (aNode.getParentNode().getNodeName()=="translations"){
-				//				System.out.println(aNode.getParentNode().getParentNode().getParentNode().getNodeName());
 				Node data = aNode.getParentNode().getParentNode().getParentNode();
 				Element eElement = (Element) aNode;
 				Element eData = (Element) data;
-				//				System.out.println("id : " + eData.getAttribute("id"));
-				//				System.out.println("name : " + eData.getAttribute("name"));
-				//				System.out.println("biotype : " + eData.getAttribute("biotype"));
-				//				System.out.println("description : " + eData.getAttribute("description"));
-				//				System.out.println("chromosome : " + eData.getAttribute("start").charAt(0));
-				//				System.out.println("dbname id : " + eElement.getAttribute("dbname"));
-				//				System.out.println("display_id : " + eElement.getAttribute("display_id"));
-
-
+				
 				Xref mainXref = new Xref(eData.getAttribute("id"), DataSource.getExistingBySystemCode("En"));
 				DataSource ds = null;
-				if (eElement.getAttribute("dbname").equals("Uniprot/SWISSPROT") ||eElement.getAttribute("dbname").equals("Uniprot/SPTREMBL")  ){
+				if (eElement.getAttribute("dbname").equals("Uniprot/SWISSPROT") 
+						||eElement.getAttribute("dbname").equals("Uniprot/SPTREMBL")  ){
 					ds = DataSource.getExistingByFullName("Uniprot-TrEMBL");
 				}
 				if (eElement.getAttribute("dbname").equals("GO")){
@@ -163,7 +120,7 @@ public class EnsemblREST {
 				String chromosome = String.valueOf(eData.getAttribute("start").charAt(0));
 				if (ds!=null){
 					Xref xref = new Xref(eElement.getAttribute("display_id"),ds);
-					//					GeneAttributes(String description, String chromosome, String symbol,String type)
+//					GeneAttributes(String description, String chromosome, String symbol,String type)
 					GeneAttributes gene = new GeneAttributes(
 							eData.getAttribute("description"),
 							chromosome,
@@ -186,71 +143,86 @@ public class EnsemblREST {
 		}
 	}
 
-	public static void bdbCreate() throws IDMapperException, SQLException, FileNotFoundException{
+	public static void bdbCreate(String path,String pathOld, SpeciesConfiguration config) 
+			throws IDMapperException, SQLException, FileNotFoundException{
 		BridgeDbCreator creator = new BridgeDbCreator(dbEntries);
-
-		creator.setOutputFilePath("/home/bigcat-jonathan/LinkTest/derby_test/Ec_Derby_Ensembl_80");
+		
+		creator.setOutputFilePath(path+config.getFileName());
 		creator.setDbSourceName("Ensembl");
-		creator.setDbVersion("0.1");
-		creator.setDbSeries("Escherichia coli genes and proteins");
-//		creator.setDbSeries("Bacillus subtilis genes and proteins");
-//		creator.setDbSeries("Mycobacterium Tuberculosis genes and proteins");
+		creator.setDbVersion("1");
+		creator.setDbSeries(config.getDBName());
 		creator.setDbDataType("GeneProduct");
-
+		
 		DbBuilder dbBuilder = new DbBuilder(creator);
 		dbBuilder.createNewDb();
-
 		dbBuilder.addEntry(dbEntries,geneSet);
-
 		dbBuilder.finalizeDb();
-
 		System.out.println(dbBuilder.getError()+" errors (duplicates) occurred"+ dbBuilder.getErrorString());
 		
-		
-		BridgeQC main = new BridgeQC (new File("/home/bigcat-jonathan/LinkTest/derby_old/"
-				+"Ec_Derby_20130701.bridge"),
-				new File("/home/bigcat-jonathan/LinkTest/derby_test/"
-						+"Ec_Derby_Ensembl_80.bridge"));	
+	}
+//	public static void report(boolean qc,String pathOld, String path,SpeciesConfiguration config) throws IDMapperException, SQLException, ClassNotFoundException, IOException, ConverterException{
+//		if (qc){
+//			runQC(pathOld, path, config);
+//			String old = pathOld
+//					+config.getFileName().toUpperCase().charAt(0)							
+//					+config.getFileName().charAt(1)
+//					+"_Derby_20130701.bridge";
+//			String current = path+config.getFileName()+".bridge";
+//			String report = path+config.getFileName().toUpperCase().charAt(0)
+//					+config.getFileName().charAt(1)+"_outdatedQC_81";
+//			OutdatedIdsReport.run(old,current,report);
+//		}
+//	}
+//	public static void runQC(String pathOld, String path,SpeciesConfiguration config) throws IDMapperException, SQLException, FileNotFoundException{
+//		BridgeQC main = new BridgeQC (new File(pathOld
+//				+config.getFileName().toUpperCase().charAt(0)
+//				+config.getFileName().charAt(1)
+//				+"_Derby_20130701.bridge"),
+//				new File(path+config.getFileName()+".bridge"));	
+//		main.run();
+//		String fileName = path+"report_"+config.getFileName()+".qc";
+//		PrintWriter pw  = new PrintWriter(new FileOutputStream(fileName));	
+//		pw.println(main.getOutput());
+//		pw.close();
+//	}
+	public static void report(boolean qc,String pathOld, String path,SpeciesConfiguration config) 
+			throws IDMapperException, SQLException, ClassNotFoundException, IOException, ConverterException{
+		if (qc){
+			File dir = new File (pathOld);
+			FilenameFilter textFilter = new FilenameFilter() {
+				public boolean accept(File dir, String name) {
+					String lowercaseName = name.toLowerCase();
+					if (lowercaseName.endsWith(".bridge")) {
+						return true;
+					} else {
+						return false;
+					}
+				}
+			};
+			File[] listFiles = dir.listFiles(textFilter);
+			String symbol = ""+config.getFileName().toUpperCase().charAt(0)+config.getFileName().charAt(1);
+			String patholdDB = "";
+			File oldDB = null;
+			for (File f : listFiles){
+				if (f.getName().startsWith(symbol)){
+					patholdDB = f.getAbsolutePath();
+					oldDB = f;
+				}
+			}
+			runQC(oldDB, path, config);
+			String current = path+config.getFileName()+".bridge";
+			String report = path+config.getFileName()+"_outdatedQC";
+			OutdatedIdsReport.run(patholdDB,current,report);
+		}
+	}
+	public static void runQC(File oldDB, String path,SpeciesConfiguration config) 
+			throws IDMapperException, SQLException, FileNotFoundException{
+		BridgeQC main = new BridgeQC (oldDB,
+				new File(path+config.getFileName()+".bridge"));	
 		main.run();
-		String fileName = "/home/bigcat-jonathan/LinkTest/derby_test/"+"report_"+"Ec_Derby_Ensembl_80"+".qc";
+		String fileName = path+"report_"+config.getFileName()+".qc";
 		PrintWriter pw  = new PrintWriter(new FileOutputStream(fileName));	
 		pw.println(main.getOutput());
 		pw.close();
-	}
-	public void parseXML(){
-		/*
-		NodeList nList = doc.getElementsByTagName("data");
-
-		//				for (int temp = 0; temp < nList.getLength(); temp++) {
-		for (int temp = 0; temp < 1; temp++) {	 
-			Node nNode = nList.item(temp);
-			//			System.out.println(nNode.getNodeType());
-			//			System.out.println(nNode.getAttributes().item(0));
-
-			System.out.println("\nCurrent Element :" + nNode.getNodeName());
-			if (nNode.getNodeType() == Node.ELEMENT_NODE) {
-
-				Element eElement = (Element) nNode;
-				System.out.println("id : " + eElement.getAttribute("id"));
-				//				System.out.println("dbname id : " + eElement.getAttribute("dbname"));
-				//				System.out.println("primary_id : " + eElement.getAttribute("primary_id"));
-			}
-			NodeList aList = doc.getElementsByTagName("xrefs");
-			for (int atemp = 0; atemp < 2; atemp++) {	 //aList.getLength()
-				Node aNode = aList.item(atemp);
-
-				System.out.println("\nCurrent Element :" + aNode.getNodeName());
-				System.out.println("\n Parent : "+aNode.getParentNode().getNodeName());
-				if (aNode.getNodeType() == Node.ELEMENT_NODE) {
-
-					Element eElement = (Element) aNode;
-					//					System.out.println("id : " + eElement.getAttribute("id"));
-					System.out.println("dbname id : " + eElement.getAttribute("dbname"));
-					System.out.println("primary_id : " + eElement.getAttribute("primary_id"));
-				}
-			}
-		}*/
-
-		//		System.out.println("----------------------------");
 	}
 }

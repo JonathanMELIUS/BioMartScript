@@ -7,6 +7,7 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -22,10 +23,8 @@ import org.wikipathways.reportbots.OutdatedIdsReport;
 public class Main {
 
 	public static void main(String[] args) throws ClassNotFoundException, IDMapperException, IOException, SQLException, ConverterException {
-		
-		File dir = new File ("/home/bigcat-jonathan/LinkTest/ConfigFile/");
-//		HomoSapiens.config
-
+		DataSourceTxt.init(); //Initialize BrideDb data source
+		File dir = new File (args[0]);
 		String path = args[1];
 		String pathOld = null;
 		Boolean qc = false;
@@ -44,38 +43,17 @@ public class Main {
 					}
 				}
 			};
-			File[] listFiles = dir.listFiles(textFilter);
-			DataSourceTxt.init(); //Initialize BrideDb data source
+			File[] listFiles = dir.listFiles(textFilter);			
 			for(File f : listFiles){
 				SpeciesConfiguration config = new SpeciesConfiguration(f.getAbsolutePath());
-				runDB(config, path);
-				if (qc){
-					runQC(pathOld, path, config);
-					String old = pathOld
-							+config.getFileName().toUpperCase().charAt(0)							
-							+config.getFileName().charAt(1)
-							+"_Derby_20130701.bridge";
-					String current = path+config.getFileName()+".bridge";
-					String report = path+config.getFileName().toUpperCase().charAt(0)
-							+config.getFileName().charAt(1)+"_outdatedQC_81";
-					OutdatedIdsReport.run(old,current,report);
-				}
+//				runDB(config, path);
+				report(qc,pathOld,path,config);
 			}
 		}
 		else{
 			SpeciesConfiguration config = new SpeciesConfiguration(dir.getAbsolutePath());
 			runDB(config, path);
-			if (qc){
-				runQC(pathOld, path, config);
-				String old = pathOld
-						+config.getFileName().toUpperCase().charAt(0)							
-						+config.getFileName().charAt(1)
-						+"_Derby_20130701.bridge";
-				String current = path+config.getFileName()+".bridge";
-				String report = path+config.getFileName().toUpperCase().charAt(0)
-						+config.getFileName().charAt(1)+"_outdatedQC_81";
-				OutdatedIdsReport.run(old,current,report);
-			}
+			report(qc,pathOld,path,config);			
 		}
 	}
 	
@@ -119,14 +97,56 @@ public class Main {
 		}
 
 		System.out.println(date);
-		mart.bridgedbCreator(dbEntries,geneSet,path,config.getFileName());
+		mart.bridgedbCreator(dbEntries,geneSet,path);
 		System.out.println(date);
 	}
-	public static void runQC(String pathOld, String path,SpeciesConfiguration config) throws IDMapperException, SQLException, FileNotFoundException{
-		BridgeQC main = new BridgeQC (new File(pathOld
-				+config.getFileName().toUpperCase().charAt(0)
-				+config.getFileName().charAt(1)
-				+"_Derby_20130701.bridge"),
+	public static void report(boolean qc,String pathOld, String path,SpeciesConfiguration config) throws IDMapperException, SQLException, ClassNotFoundException, IOException, ConverterException{
+		if (qc){
+			File dir = new File (pathOld);
+			FilenameFilter textFilter = new FilenameFilter() {
+				public boolean accept(File dir, String name) {
+					String lowercaseName = name.toLowerCase();
+					if (lowercaseName.endsWith(".bridge")) {
+						return true;
+					} else {
+						return false;
+					}
+				}
+			};
+			File[] listFiles = dir.listFiles(textFilter);
+			String symbol = ""+config.getFileName().toUpperCase().charAt(0)+config.getFileName().charAt(1);
+			System.out.println(symbol);
+			String patholdDB = "";
+			File oldDB = null;
+			for (File f : listFiles){
+				if (f.getName().startsWith(symbol)){
+					patholdDB = f.getAbsolutePath();
+					oldDB = f;
+				}
+			}
+			try{
+			runQC(oldDB, path, config);
+			}
+			catch (Exception e){
+				
+			}
+//			String old = pathOld
+//					+config.getFileName().toUpperCase().charAt(0)							
+//					+config.getFileName().charAt(1)
+//					+"_Derby_20130701.bridge";
+			String current = path+config.getFileName()+".bridge";
+			String report = path+config.getFileName().toUpperCase().charAt(0)
+					+config.getFileName().charAt(1)+"_outdatedQC_81";
+//			OutdatedIdsReport.run(patholdDB,current,report);
+		}
+	}
+	public static void runQC(File oldDB, String path,SpeciesConfiguration config) throws IDMapperException, SQLException, FileNotFoundException{
+//		BridgeQC main = new BridgeQC (new File(pathOld
+//				+config.getFileName().toUpperCase().charAt(0)
+//				+config.getFileName().charAt(1)
+//				+"_Derby_20130701.bridge"),
+//				new File(path+config.getFileName()+".bridge"));
+		BridgeQC main = new BridgeQC (oldDB,
 				new File(path+config.getFileName()+".bridge"));	
 		main.run();
 		String fileName = path+"report_"+config.getFileName()+".qc";
