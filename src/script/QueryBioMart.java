@@ -8,6 +8,7 @@ import java.io.StringWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.util.logging.Logger;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -22,6 +23,8 @@ import org.w3c.dom.ls.LSOutput;
 import org.w3c.dom.ls.LSSerializer;
 
 public class QueryBioMart {	
+	private static Logger logger = Logger.getLogger("Bdb_creation");
+	
 	public static String docToString(Document xml) {
 		LSSerializer ls =  ((DOMImplementationLS) xml.getImplementation()).createLSSerializer();
 		LSOutput lsOut = ((DOMImplementationLS) xml.getImplementation()).createLSOutput();
@@ -85,8 +88,8 @@ public class QueryBioMart {
 			return sb.toString();
 		}
 	}
-	public static Document createQuery(String organism, String externalSource, 
-			String schema,String chrFilter ,Boolean attributes,Boolean filter) {
+	public static Document createQuery(SpeciesConfiguration config, String externalSource, 
+			Boolean attributes,Boolean chromosome_Filter) {
 		try {
 			DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
 			DocumentBuilder docBuilder = dbf.newDocumentBuilder();
@@ -101,7 +104,7 @@ public class QueryBioMart {
 			Element root = query.createElement("Query");
 			root.setAttribute("client", "true");
 			root.setAttribute("formatter", "TSV");
-			root.setAttribute("virtualSchemaName",schema);
+			root.setAttribute("virtualSchemaName",config.getSchema());
 			root.setAttribute("header", "1");
 			root.setAttribute("uniqueRows", "1" );
 			root.setAttribute("count", "" );
@@ -110,13 +113,13 @@ public class QueryBioMart {
 
 			/* specify the dataset to use */
 			Element dataset = query.createElement("Dataset");
-			dataset.setAttribute("name", organism);
+			dataset.setAttribute("name", config.getSpecies());
 			root.appendChild(dataset);
 			
-			if (filter){
+			if (chromosome_Filter){
 				Element chr = query.createElement("Filter");
 				chr.setAttribute("name", "chromosome_name");
-				chr.setAttribute("value", chrFilter);
+				chr.setAttribute("value", config.getChromosome());
 				dataset.appendChild(chr);
 			}
 			
@@ -138,7 +141,7 @@ public class QueryBioMart {
 			dataset.appendChild(gene_id);			
 			gene_id = query.createElement("Attribute");	
 			// Difference between the main Ensembl or the others(Plants...)
-			if (schema.equals("default"))
+			if (config.getSchema().equals("default"))
 				gene_id.setAttribute("name","external_gene_name");
 			else
 				gene_id.setAttribute("name","external_gene_id");
@@ -154,13 +157,14 @@ public class QueryBioMart {
 		}
 		return null; 
 	}
-	public static void loadBiomartAttributes(BioMartAttributes bio, String organims,String endpoint ){
+	public static void loadBiomartAttributes(BioMartAttributes bio, SpeciesConfiguration config ){
 		
-		String biomart = endpoint+"martservice?type=attributes&dataset="+organims;
+		String biomart = config.getEndpoint()+"martservice?type=attributes&dataset="+config.getSpecies();
 	
-		String extProbe = organims+"__eFG";
+		String extProbe = config.getSpecies()+"__eFG";
 
 		InputStream is = null;
+
 		try {
 			URL url = new URL(biomart );
 
@@ -173,19 +177,20 @@ public class QueryBioMart {
 				System.out.println("HTTP Response code: " + urlc.getResponseCode());
 			}
 			is = urlc.getInputStream();
+		} catch (IOException e1) {
+			e1.printStackTrace();
 		}
-		catch (Exception e) {
-			e.printStackTrace();
-		}
-
 		BufferedReader br = null;
 		String line;
-
+		String[] split = null;
 		try {
 			br = new BufferedReader(new InputStreamReader(is));
+			line = br.readLine();
+			split = line.split("\t");
+			split[1].toString();
 			while ((line = br.readLine()) != null) {
+				split = line.split("\t");				
 				if ( line.contains(extProbe) || line.contains("efg")  ){
-					String[] split = line.split("\t");
 					if (split[1].contains("Affy")){
 						BioMartReference ref = new BioMartReference(split[0], split[1], "Affy");
 						bio.addReference(ref);
@@ -198,10 +203,16 @@ public class QueryBioMart {
 						BioMartReference ref = new BioMartReference(split[0], split[1], "Illumina");
 						bio.addReference(ref);
 					}
-				}					
+				}
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
+		}
+		catch (ArrayIndexOutOfBoundsException ae){
+			logger.info("Incorrect dataset name:  "+ split[0]+"\n"+
+					"Please check the dataset name here: "+
+					config.getEndpoint()+"martservice?type=datasets&mart="+config.getSchema()
+					);
 		}
 	}
 }

@@ -1,6 +1,5 @@
 package script;
 
-
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.HttpURLConnection;
@@ -35,8 +34,8 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.ParserConfigurationException;
 
 public class EnsemblREST {
-	static HashMap<Xref, HashSet<Xref>>  dbEntries = new HashMap<Xref, HashSet<Xref>>();	//Contains the mapping from Ensembl to external database 
-	static HashMap<Xref, GeneAttributes>  geneSet = new HashMap<Xref, GeneAttributes>();	//Contains the gene attributes of the Ensembl gene id
+	static HashMap<Xref, HashSet<Xref>>  dbEntries; 	//Contains the mapping from Ensembl to external database 
+	static HashMap<Xref, GeneAttributes>  geneSet;	//Contains the gene attributes of the Ensembl gene id
 	static Document doc;
 	public static void main(String[] args) throws Exception {
 		DataSourceTxt.init(); //Initialize BrideDb data source
@@ -53,7 +52,7 @@ public class EnsemblREST {
 			FilenameFilter textFilter = new FilenameFilter() {
 				public boolean accept(File dir, String name) {
 					String lowercaseName = name.toLowerCase();
-					if (lowercaseName.endsWith(".bactconfig")) {
+					if (lowercaseName.endsWith(".configbact")) {
 						return true;
 					} else {
 						return false;
@@ -97,9 +96,12 @@ public class EnsemblREST {
 		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
 		DocumentBuilder db = dbf.newDocumentBuilder();
 		doc = db.parse(response);
-		doc.getDocumentElement().normalize();
+		doc.getDocumentElement().normalize();		
 	}
+	
 	public static void parseXrefs(){
+		dbEntries = new HashMap<Xref, HashSet<Xref>>();	
+		geneSet = new HashMap<Xref, GeneAttributes>();
 		NodeList aList = doc.getElementsByTagName("xrefs");
 		for (int atemp = 0; atemp < aList.getLength(); atemp++) {
 			Node aNode = aList.item(atemp);
@@ -160,31 +162,6 @@ public class EnsemblREST {
 		System.out.println(dbBuilder.getError()+" errors (duplicates) occurred"+ dbBuilder.getErrorString());
 		
 	}
-//	public static void report(boolean qc,String pathOld, String path,SpeciesConfiguration config) throws IDMapperException, SQLException, ClassNotFoundException, IOException, ConverterException{
-//		if (qc){
-//			runQC(pathOld, path, config);
-//			String old = pathOld
-//					+config.getFileName().toUpperCase().charAt(0)							
-//					+config.getFileName().charAt(1)
-//					+"_Derby_20130701.bridge";
-//			String current = path+config.getFileName()+".bridge";
-//			String report = path+config.getFileName().toUpperCase().charAt(0)
-//					+config.getFileName().charAt(1)+"_outdatedQC_81";
-//			OutdatedIdsReport.run(old,current,report);
-//		}
-//	}
-//	public static void runQC(String pathOld, String path,SpeciesConfiguration config) throws IDMapperException, SQLException, FileNotFoundException{
-//		BridgeQC main = new BridgeQC (new File(pathOld
-//				+config.getFileName().toUpperCase().charAt(0)
-//				+config.getFileName().charAt(1)
-//				+"_Derby_20130701.bridge"),
-//				new File(path+config.getFileName()+".bridge"));	
-//		main.run();
-//		String fileName = path+"report_"+config.getFileName()+".qc";
-//		PrintWriter pw  = new PrintWriter(new FileOutputStream(fileName));	
-//		pw.println(main.getOutput());
-//		pw.close();
-//	}
 	public static void report(boolean qc,String pathOld, String path,SpeciesConfiguration config) 
 			throws IDMapperException, SQLException, ClassNotFoundException, IOException, ConverterException{
 		if (qc){

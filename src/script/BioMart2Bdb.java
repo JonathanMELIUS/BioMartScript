@@ -7,6 +7,7 @@ import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.logging.Logger;
 
 import org.bridgedb.DataSource;
 import org.bridgedb.IDMapperException;
@@ -21,7 +22,7 @@ public class BioMart2Bdb {
 	private HashMap<Xref, HashSet<Xref>>  dbEntries = new HashMap<Xref, HashSet<Xref>>();	
 	private HashMap<Xref, GeneAttributes>  geneSet = new HashMap<Xref, GeneAttributes>();
 	private SpeciesConfiguration config;
-
+	private Logger logger = Logger.getLogger("Bdb_creation");
 
 	public BioMart2Bdb(SpeciesConfiguration config,BioMartAttributes bio,HashMap<Xref, 
 			HashSet<Xref>>  dbEntries,HashMap<Xref, GeneAttributes>  geneSet){
@@ -32,66 +33,35 @@ public class BioMart2Bdb {
 
 	}
 
-	//	public void launch(){
-	//		Date date = new Date();	
-	//		System.out.println(date);
-	//
-	//	
-	//		bio.init();
-	//
-	//		BioMart2Bdb mart = new BioMart2Bdb(config,bio,dbEntries,geneSet);
-	//		List<String> filter = config.filterDatasource(config.getDatasource(),bio);
-	//
-	//		String organism = config.getSpecies();
-	//		QueryBioMart.martAttributes(bio,organism,config.getEndpoint());
-	//
-	//		for (String probe:config.getProbeSet()){
-	//			mart.query(organism,probe,true);
-	//		}
-	//
-	//		for (String ds:filter){
-	//			mart.query(organism,ds,true);
-	//		}
-	//
-	//		System.out.println(date);
-	//
-	//		mart.bridgedbCreator(dbEntries,geneSet,path,config.getFileName());
-	//
-	//		System.out.println(date);
-	//		
-	//	}
-
-
-	public void query(String organism, String externalSource,String chrFilter,Boolean attributes,Boolean filter){
-		Document result = QueryBioMart.createQuery(organism,externalSource, config.getSchema(),chrFilter,attributes,filter);
+	public void query(String externalSource,Boolean attributes_Filter,Boolean chromosome_Filter){
+		Document result = QueryBioMart.createQuery(config,externalSource,
+				attributes_Filter,chromosome_Filter);
 		InputStream is = QueryBioMart.getDataStream(result,config.getEndpoint());
 		BufferedReader br = new BufferedReader(new InputStreamReader(is));
 
 		try {
-			parse(br);
+			parse(br,externalSource);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
 
-	public void parse(BufferedReader br) throws IOException{
+	public void parse(BufferedReader br, String externalSource) throws IOException{
 
 		String line = br.readLine();
 		String[] split = line.split("\t");
 		DataSource ds=null;
 		try{
-			if (split[1].equals("UniProt/SwissProt Accession") 
-					|| split[1].equals("UniProtKB/SwissProt ID")
-					|| split[1].equals("UniProt/SwissProt ID")){
-				split[1]="UniProt/TrEMBL Accession";
+			if (externalSource.equals("uniprot_swissprot_accession") 
+				|| externalSource.equals("uniprot_swissprot")){
+				externalSource="uniprot_sptrembl";
 			}
 			System.out.println(split[1]);
-			ds = DataSource.getExistingByFullName(bio.getReference(split[1]).get(0).getGpmlName());
+			ds = DataSource.getExistingByFullName(bio.getReference(externalSource).get(0).getGpmlName());
 			line = br.readLine(); //Skip the header
 			while (line != null) {	
 				split = line.split("\t");
 				Xref mainXref = new Xref(split[0], DataSource.getExistingBySystemCode("En"));
-				//				if (split.length>1){ // only parse if there is a external reference in this Ensembl id
 				if (split[1].length()>1){ // only parse if there is a external reference in this Ensembl id
 					Xref xref = new Xref(split[1],ds);
 					GeneAttributes gene = new GeneAttributes(split[2], split[3], split[4], split[5]);
@@ -117,7 +87,20 @@ public class BioMart2Bdb {
 			}
 		}
 		catch (ArrayIndexOutOfBoundsException ae){
-			System.err.println("Incorrect datasource	"+split[0]);			
+			logger.info("Incorrect datasource: "+split[0]+"\n"+
+					"Please check the datasource here: "+
+					 config.getEndpoint()+"martservice?type=attributes&dataset="+config.getSpecies()
+					 );
+		}
+		catch (IndexOutOfBoundsException e){
+			e.printStackTrace();
+			logger.info(externalSource+" is not present in the BioMartSources.tsv file,"+
+					" please add it to conver into a BridgeDb datasource"+"\n"+
+					"BridgeDb datasource: https://raw.githubusercontent.com/bridgedb/BridgeDb/master/org.bridgedb.bio/resources/org/bridgedb/bio/datasources.txt"+"\n"+
+					"BioMart datasource: "+config.getEndpoint()+"martservice?type=attributes&dataset="+config.getSpecies());
+		}
+		catch (Exception e){
+			e.printStackTrace();
 		}
 		br.close();
 	}
