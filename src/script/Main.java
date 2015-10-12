@@ -13,6 +13,12 @@ import java.util.logging.FileHandler;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 
+import org.kohsuke.args4j.Argument;
+import org.kohsuke.args4j.CmdLineException;
+import org.kohsuke.args4j.CmdLineParser;
+import org.kohsuke.args4j.Option;
+import org.kohsuke.args4j.spi.BooleanOptionHandler;
+
 import org.bridgedb.IDMapperException;
 import org.bridgedb.Xref;
 import org.bridgedb.bio.DataSourceTxt;
@@ -20,8 +26,26 @@ import org.bridgedb.tools.qc.BridgeQC;
 import org.wikipathways.reportbots.OutdatedIdsReport;
 
 public class Main {
+	@Option(name = "-q", aliases = {"--qc"}, usage = "Affiche l'aide")
+	private static boolean qc;
+
+	@Option(name = "-i", aliases = {"--inclusive"}, usage = "Affiche la version")
+	private static boolean inclusive;
+
+	@Argument
+	private List<String> argument;
+	
 	protected static Logger logger;
 	
+	 private static void printUsage() {
+	        System.out.println("Usage: java -jar BioMart2BridgeDb.jar <configurationFile> <newDatabase> "
+	        		+ "(optional)<QC>  (optional)<inclusive>");
+	        System.out.println("<configurationFile> location of configuration file");
+	        System.out.println("<newDatabase> location for the new database");
+	        System.out.println("<QC> (optional) directory of the old database - run QC");
+	        System.out.println("<inclusive> (optional) use inclusive BridgeDb list");
+	    }
+
 	/**
 	 * java -jar BioMart2BridgeDb.jar arg1 arg2 arg3 arg4
 	 * arg1: location of configuration file
@@ -37,42 +61,104 @@ public class Main {
 			throws ClassNotFoundException, IDMapperException, IOException {
 		logInit();
 		DataSourceTxt.init(); //Initialize BrideDb data source
-		File dir = new File (args[0]);
-		String path = args[1];
+		File dir = null;
+		String path = null;
 		String pathOld = null;
-		Boolean qc = false;	
-		Boolean include = false;
+//		Boolean qc = false;	
+//		Boolean inclusive = false;
 		
 		switch (args.length) {
-	        case 3: pathOld = args[2];
-					qc = true;
-	                break;
-	        case 4:	include = true;	 
-	        		break;
-		}		
-		if (dir.isDirectory()){
-			FilenameFilter textFilter = new FilenameFilter() {
-				public boolean accept(File dir, String name) {
-					String lowercaseName = name.toLowerCase();
-					if (lowercaseName.endsWith(".config")) {
-						return true;
-					} else {
-						return false;
+		case 0: printUsage();
+		break;
+		case 1: printUsage();
+		break;
+		case 2: dir = new File (args[0]);
+			path = args[1];
+			if (dir.isDirectory()){
+				FilenameFilter textFilter = new FilenameFilter() {
+					public boolean accept(File dir, String name) {
+						String lowercaseName = name.toLowerCase();
+						if (lowercaseName.endsWith(".config")) {
+							return true;
+						} else {
+							return false;
+						}
 					}
+				};
+				File[] listFiles = dir.listFiles(textFilter);			
+				for(File f : listFiles){
+					SpeciesConfiguration config = new SpeciesConfiguration(f.getAbsolutePath());
+					runDB(config, path,inclusive);
+					if (qc) report(false,pathOld,path,config);
 				}
-			};
-			File[] listFiles = dir.listFiles(textFilter);			
-			for(File f : listFiles){
-				SpeciesConfiguration config = new SpeciesConfiguration(f.getAbsolutePath());
-				runDB(config, path,include);
-				if (qc) report(false,pathOld,path,config);
+				OutdatedIdsReport.writeAll("All_ids.tsv");
 			}
-			OutdatedIdsReport.writeAll("All_ids.tsv");
-		}
-		else{
-			SpeciesConfiguration config = new SpeciesConfiguration(dir.getAbsolutePath());
-			runDB(config, path,include);
-			if (qc) report(false,pathOld,path,config);			
+			else{
+				SpeciesConfiguration config = new SpeciesConfiguration(dir.getAbsolutePath());
+				runDB(config, path,inclusive);
+				if (qc) report(false,pathOld,path,config);			
+			}
+			break;
+		case 3: 
+			dir = new File (args[0]);
+			path = args[1];
+			pathOld = args[2];
+			qc = true;
+			if (dir.isDirectory()){
+				FilenameFilter textFilter = new FilenameFilter() {
+					public boolean accept(File dir, String name) {
+						String lowercaseName = name.toLowerCase();
+						if (lowercaseName.endsWith(".config")) {
+							return true;
+						} else {
+							return false;
+						}
+					}
+				};
+				File[] listFiles = dir.listFiles(textFilter);			
+				for(File f : listFiles){
+					SpeciesConfiguration config = new SpeciesConfiguration(f.getAbsolutePath());
+					runDB(config, path,inclusive);
+					if (qc) report(false,pathOld,path,config);
+				}
+				OutdatedIdsReport.writeAll("All_ids.tsv");
+			}
+			else{
+				SpeciesConfiguration config = new SpeciesConfiguration(dir.getAbsolutePath());
+				runDB(config, path,inclusive);
+				if (qc) report(false,pathOld,path,config);			
+			}
+			break;
+		case 4:	
+			dir = new File (args[0]);
+			path = args[1];
+			pathOld = args[2];
+			inclusive = true;	 
+			if (dir.isDirectory()){
+				FilenameFilter textFilter = new FilenameFilter() {
+					public boolean accept(File dir, String name) {
+						String lowercaseName = name.toLowerCase();
+						if (lowercaseName.endsWith(".config")) {
+							return true;
+						} else {
+							return false;
+						}
+					}
+				};
+				File[] listFiles = dir.listFiles(textFilter);			
+				for(File f : listFiles){
+					SpeciesConfiguration config = new SpeciesConfiguration(f.getAbsolutePath());
+					runDB(config, path,inclusive);
+					if (qc) report(false,pathOld,path,config);
+				}
+				OutdatedIdsReport.writeAll("All_ids.tsv");
+			}
+			else{
+				SpeciesConfiguration config = new SpeciesConfiguration(dir.getAbsolutePath());
+				runDB(config, path,inclusive);
+				if (qc) report(false,pathOld,path,config);			
+			}
+			break;
 		}
 	}
 	
@@ -101,6 +187,7 @@ public class Main {
 		QueryBioMart.loadBiomartAttributes(bio,config);		
 		BioMart2Bdb mart = new BioMart2Bdb(config,bio,dbEntries,geneSet);
 		
+		System.out.println("Start to download each datasources");
 		// Probe queries
 		try{
 			for (String probe:config.getProbeSet()){
@@ -124,6 +211,7 @@ public class Main {
 			mart.query(ds,true,true);
 		}
 		System.out.println(date);
+		System.out.println("Start to the creation of the database, might take some time");
 		mart.bridgedbCreator(dbEntries,geneSet,path);
 		System.out.println(date);
 	}

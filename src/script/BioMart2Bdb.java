@@ -56,7 +56,7 @@ public class BioMart2Bdb {
 				|| externalSource.equals("uniprot_swissprot")){
 				externalSource="uniprot_sptrembl";
 			}
-			System.out.println(split[1]);
+			System.out.println("Downloading:" +split[1]);
 			ds = DataSource.getExistingByFullName(bio.getReference(externalSource).get(0).getGpmlName());
 			line = br.readLine(); //Skip the header
 			while (line != null) {	

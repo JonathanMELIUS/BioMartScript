@@ -14,11 +14,14 @@ public class SpeciesConfiguration {
 	private Properties prop;
 	private InputStream input;
 //	static String includeList = "En,Mb,L,X,Il,Ag,Q,Om,U,Rf,S,Ip,T,Pd,H,M,R,D,Z,F,W,Gg,A,Ti,Ir,N,Uc,Pl,Gm,Bg,Ec,Wg,Gw,Kg,Bc,Tb";
+	
 	private static String includeList = "Ensembl,miRBase Sequence,Entrez Gene,Affy,Illumina,Agilent,RefSeq,OMIM,"
 			+ "UniGene,Rfam,Uniprot-TrEMBL,IPI,GeneOntology,PDB,HGNC,MGI,RGD,SGD,ZFIN,FlyBase,WormBase,Gramene Genes DB,"
 			+ "TAIR,TIGR,IRGSP Gene,NASC Gene,UCSC Genome Browser,PlantGDB,BioGrid,EcoGene,WikiGenes,Gene Wiki,KEGG Genes,"
 			+ "BioCyc,TubercuList,Uniprot-SwissProt";
+	
 	private Logger logger = Logger.getLogger("Bdb_creation");
+	
 	public SpeciesConfiguration(String filename){
 		prop = new Properties();
 //		prop.stringPropertyNames();

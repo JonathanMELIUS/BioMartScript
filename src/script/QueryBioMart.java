@@ -41,8 +41,8 @@ public class QueryBioMart {
 			encodedXml = URLEncoder.encode(encodedXml, "UTF-8"); // encode to url
 			URL url = new URL(endpoint+"martservice/result?query=" + encodedXml);
 
-			System.out.println("Biomart query URL: " + url.toString());
-
+//			System.out.println("Biomart query URL: " + url.toString());
+//			logger.info("Biomart query URL: " + url.toString());
 			HttpURLConnection urlc = (HttpURLConnection) url.openConnection();
 			urlc.setDoOutput(true);
 			int code = urlc.getResponseCode();
