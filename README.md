@@ -54,4 +54,4 @@ Config file
 
 * Filters
 
-http://may2015.archive.ensembl.org/biomart/martservice?type=filters&dataset=drerio_gene_ensembl
+        http://may2015.archive.ensembl.org/biomart/martservice?type=filters&dataset=drerio_gene_ensembl
