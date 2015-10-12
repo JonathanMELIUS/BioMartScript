@@ -53,5 +53,5 @@ Config file
     **gene_datasource**=refseq_mrna,refseq_ncrna,refseq_peptide,uniprot_sptrembl,pdb,tair_locus,go_accession,unigene,entrezgene,wikigene_id,nasc_gene_id,uniprot_swissprot_accession
 
 * Filters
-
-        http://may2015.archive.ensembl.org/biomart/martservice?type=filters&dataset=drerio_gene_ensembl
+ 
+    http://may2015.archive.ensembl.org/biomart/martservice?type=filters&dataset=drerio_gene_ensembl
