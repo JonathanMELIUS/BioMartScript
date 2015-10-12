@@ -6,18 +6,25 @@ A script to create a BrigdeDb database from BioMart queries.
 
 Run
 ============
+In your terminal:
 
-java -jar BioMart2BridgeDb.jar arg1 arg2 arg3 arg4
+java -jar BioMart2BridgeDb.jar \<configFile\> \<outputPath\> \<oldDB\> \<inclusive\>
 
-- arg1: location of configuration file
+- \<configFile\>: location of configuration file
 
-- arg2: location for the new database
+- \<outputPath\>: Path for the new database
 
-- arg3: (optional) directory of the old database - run QC
+- \<oldDB\>: (optional) directory of the old database - run QC
 
-- arg4: (optional) use inclusive BridgeDb list
+- \<inclusive\>: (optional) use inclusive BridgeDb list
 
-Config file
+List of default config files:
+============
+
+https://github.com/JonathanMELIUS/BioMartScript/tree/bc62ed7fba16dd143292ee10fb4e261d196dd7a6/src/resource
+Example: [Danio rerio config file](https://raw.githubusercontent.com/JonathanMELIUS/BioMartScript/bc62ed7fba16dd143292ee10fb4e261d196dd7a6/src/resource/DanioRerio.config)
+
+How to create your own config file
 ============
 * Give the version of Ensembl BioMart to query:
 
@@ -52,6 +59,8 @@ Config file
     **probe_set**=affy_ath1_121501
     **gene_datasource**=refseq_mrna,refseq_ncrna,refseq_peptide,uniprot_sptrembl,pdb,tair_locus,go_accession,unigene,entrezgene,wikigene_id,nasc_gene_id,uniprot_swissprot_accession
 
-* Filters
+* Optional filters (chromosome list)
+
+    e.g: **chromosome_name**=1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,X,MT
  
-    http://may2015.archive.ensembl.org/biomart/martservice?type=filters&dataset=drerio_gene_ensembl
+    http://may2015.archive.ensembl.org/biomart/martservice?type=filters&dataset=btaurus_gene_ensembl
