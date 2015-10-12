@@ -22,6 +22,7 @@ List of default config files:
 ============
 
 https://github.com/JonathanMELIUS/BioMartScript/tree/bc62ed7fba16dd143292ee10fb4e261d196dd7a6/src/resource
+
 Example: [Danio rerio config file](https://raw.githubusercontent.com/JonathanMELIUS/BioMartScript/bc62ed7fba16dd143292ee10fb4e261d196dd7a6/src/resource/DanioRerio.config)
 
 How to create your own config file
