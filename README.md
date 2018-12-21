@@ -32,6 +32,8 @@ How to create your own config file
     e.g: http://www.ensembl.org/biomart/, http://oct2014.archive.ensembl.org/biomart/,	http://metazoa.ensembl.org/biomart/
 
     **endpoint**=http://plants.ensembl.org/biomart/
+    
+    You can find an overview of releases in the [Ensemble Archive](http://www.ensembl.org/info/website/archives/index.html).
 
 * MartRegistry can be found there:
     
