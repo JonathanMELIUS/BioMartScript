@@ -21,7 +21,7 @@ java -jar BioMart2BridgeDb.jar \<configFile\> \<outputPath\> \<oldDB\> \<inclusi
 List of default config files:
 ============
 
-https://github.com/JonathanMELIUS/BioMartScript/tree/bc62ed7fba16dd143292ee10fb4e261d196dd7a6/src/resource
+Configuration files can be found in the [src/resource](src/resource) folder.
 
 Example: [Danio rerio config file](https://raw.githubusercontent.com/JonathanMELIUS/BioMartScript/bc62ed7fba16dd143292ee10fb4e261d196dd7a6/src/resource/DanioRerio.config)
 
