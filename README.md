@@ -33,7 +33,7 @@ How to create your own config file
 
     **endpoint**=http://plants.ensembl.org/biomart/
     
-    You can find an overview of releases in the [Ensemble Archive](http://www.ensembl.org/info/website/archives/index.html).
+    You can find an overview of releases in the [Ensembl Archive](http://www.ensembl.org/info/website/archives/index.html).
 
 * MartRegistry can be found there:
     
