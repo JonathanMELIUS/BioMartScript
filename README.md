@@ -1,8 +1,8 @@
-# BioMartScript
+# BridgeDb database building for gene databases
 
 Introduction
 ============
-A script to create a BrigdeDb database from BioMart queries.
+A script to create a gene-focussed BrigdeDb database based on Ensembl BioMART.
 
 Run
 ============
