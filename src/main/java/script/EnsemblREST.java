@@ -147,7 +147,7 @@ public class EnsemblREST {
 	}
 
 	public static void bdbCreate(String path,String pathOld, SpeciesConfiguration config) 
-			throws IDMapperException, SQLException, FileNotFound {
+			throws IDMapperException, SQLException, FileNotFoundException {
 		BridgeDbCreator creator = new BridgeDbCreator(dbEntries);
 		
 		creator.setOutputFilePath(path+config.getFileName());
