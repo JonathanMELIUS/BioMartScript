@@ -147,7 +147,7 @@ public class EnsemblREST {
 	}
 
 	public static void bdbCreate(String path,String pathOld, SpeciesConfiguration config) 
-			throws IDMapperException, SQLException, IOException {
+			throws IDMapperException, SQLException, FileNotFound {
 		BridgeDbCreator creator = new BridgeDbCreator(dbEntries);
 		
 		creator.setOutputFilePath(path+config.getFileName());
@@ -194,7 +194,7 @@ public class EnsemblREST {
 		}
 	}
 	public static void runQC(File oldDB, String path,SpeciesConfiguration config) 
-			throws IDMapperException, SQLException, FileNotFoundException{
+			throws IDMapperException, SQLException, IOException{
 		String fileName = path+"report_"+config.getFileName()+".qc";
 		OutputStream out = new FileOutputStream(fileName);
 		BridgeQC main = new BridgeQC (
