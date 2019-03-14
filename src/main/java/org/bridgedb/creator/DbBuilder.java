@@ -33,6 +33,7 @@ import org.bridgedb.rdb.construct.GdbConstruct;
 import org.bridgedb.rdb.construct.GdbConstructImpl3;
 
 import script.GeneAttributes;
+import script.SnpAttributes;
 
 /**
  * The class that performs the actual work on the database, used by {@link ProgressPage}.
@@ -48,12 +49,7 @@ public class DbBuilder {
 	private String errorString;
 	private int error;
 	private final long PROGRESS_INTERVAL = 1000;
-	//	private ProgressPage page;
 
-	//	public DbBuilder(ProgressPage progressPage, BridgeDbCreator creator) {
-	//		this.creator = creator;
-	//		page = progressPage;
-	//	}
 	public DbBuilder(BridgeDbCreator creator) {
 		this.creator = creator;
 	}
@@ -66,7 +62,6 @@ public class DbBuilder {
 	public void createNewDb() throws IDMapperException {
 		newDb = new GdbConstructImpl3(creator.getOutputFilePath(),
 				new DataDerby(), DBConnector.PROP_RECREATE);
-		// NewDb.connect (true);
 		newDb.createGdbTables();
 		newDb.preInsert();
 
@@ -96,44 +91,30 @@ public class DbBuilder {
 			progress++;
 			Xref mainXref = ref;
 			if (addedXrefs.add(mainXref))
-//				if (error > olderror)
-//					System.out.println(error + "\t add gene "
-//							+ mainXref.getId() + " "
-//							+ mainXref.getDataSource().getFullName());
-//				if (error > olderror)
-//					errorString = (errorString + error + "\t add gene "
-//							+ mainXref.getId() + " "
-//							+ mainXref.getDataSource().getFullName() + "\n");
+				if (error > olderror)
+					errorString = (errorString + error + "\t add gene "
+							+ mainXref.getId() + " "
+							+ mainXref.getDataSource().getFullName() + "\n");
 				error += newDb.addGene(mainXref);
-			/*
+
 			if (!addedXrefs.contains(mainXref)) {
 				error += newDb.addGene(mainXref);
-//				if (error > olderror)
-//					System.out.println(error + "\t add gene "
-//							+ mainXref.getId() + " "
-//							+ mainXref.getDataSource().getFullName());
-//				if (error > olderror)
-//					errorString = (errorString + error + "\t add gene "
-//							+ mainXref.getId() + " "
-//							+ mainXref.getDataSource().getFullName() + "\n");
+				if (error > olderror)
+					errorString = (errorString + error + "\t add gene "
+							+ mainXref.getId() + " "
+							+ mainXref.getDataSource().getFullName() + "\n");
 				olderror = error;
 				addedXrefs.add(mainXref);
-			}*/
+			}
 			error += newDb.addLink(mainXref, mainXref);
-//			if (error > olderror)
-//				System.out.println(error + "\t add link between "
-//						+ mainXref.getId() + " "
-//						+ mainXref.getDataSource().getFullName() + " and "
-//						+ mainXref.getId() + " "
-//						+ mainXref.getDataSource().getFullName());
-//			if (error > olderror)
-//				errorString = (errorString + error + "\t add link between "
-//						+ mainXref.getId() + " "
-//						+ mainXref.getDataSource().getFullName() + " and "
-//						+ mainXref.getId() + " "
-//						+ mainXref.getDataSource().getFullName() + "\n");
+			if (error > olderror)
+				errorString = (errorString + error + "\t add link between "
+						+ mainXref.getId() + " "
+						+ mainXref.getDataSource().getFullName() + " and "
+						+ mainXref.getId() + " "
+						+ mainXref.getDataSource().getFullName() + "\n");
 			olderror = error;
-			
+
 			GeneAttributes gene = geneSet.get(mainXref);
 			if (gene!=null && gene.getSymbol()!=null)
 				error += newDb.addAttribute(mainXref, "Symbol", gene.getSymbol());
@@ -143,66 +124,95 @@ public class DbBuilder {
 				error += newDb.addAttribute(mainXref, "Description", gene.getDescription());
 			if (gene!=null && gene.getChromosme()!=null)
 				error += newDb.addAttribute(mainXref, "Chromosome", gene.getChromosme());
-//			error += newDb.addAttribute(mainXref, "Synonyms", "Syn");
 
 			for (Xref rightXref : dbEntries.get(mainXref)) {
 				if (!rightXref.equals(mainXref) && rightXref != null) {
 					if (addedXrefs.add(rightXref))
 						error += newDb.addGene(rightXref);
-//						if (error > olderror)
-//							System.out.println("  " + error + "\t add gene "
-//									+ rightXref.getId() + " "
-//									+ rightXref.getDataSource().getFullName());
-//					if (error > olderror)
-//						errorString = (errorString + "  " + error
-//								+ "\t add gene " + rightXref.getId() + " "
-//								+ rightXref.getDataSource().getFullName() + "\n");
-					
-//					gene = geneSet.get(rightXref) ;
-//					if (gene!=null && gene.getSymbol()!=null)
-//						error += newDb.addAttribute(rightXref, "Symbol", gene.getSymbol());
-//					if (gene!=null && gene.getType()!=null)
-//						error += newDb.addAttribute(rightXref, "Type", gene.getType());
-//					if (gene!=null && gene.getDescription()!=null)
-//						error += newDb.addAttribute(rightXref, "Description", gene.getDescription());
-//					if (gene!=null && gene.getChromosme()!=null)
-//						error += newDb.addAttribute(rightXref, "Chromosome", gene.getChromosme());
-					/*
+						if (error > olderror)
+						errorString = (errorString + "  " + error
+								+ "\t add gene " + rightXref.getId() + " "
+								+ rightXref.getDataSource().getFullName() + "\n");
+
+					gene = geneSet.get(rightXref) ;
+					String systemCode = rightXref.getDataSource().getSystemCode();
+					if ((systemCode.equals("L")==true)
+						|| (systemCode.equals("H")==true)
+						|| (systemCode.equals("S")==true)
+						)
+					{
+					if (gene!=null && gene.getSymbol()!=null)
+						error += newDb.addAttribute(rightXref, "Symbol", gene.getSymbol());
+					if (gene!=null && gene.getType()!=null)
+						error += newDb.addAttribute(rightXref, "Type", gene.getType());
+					if (gene!=null && gene.getDescription()!=null)
+						error += newDb.addAttribute(rightXref, "Description", gene.getDescription());
+					if (gene!=null && gene.getChromosme()!=null)
+						error += newDb.addAttribute(rightXref, "Chromosome", gene.getChromosme());
+					}
 					if (!addedXrefs.contains(rightXref)) {
 						error += newDb.addGene(rightXref);
-//						if (error > olderror)
-//							System.out.println("  " + error + "\t add gene "
-//									+ rightXref.getId() + " "
-//									+ rightXref.getDataSource().getFullName());
-//						if (error > olderror)
-//							errorString = (errorString + "  " + error
-//									+ "\t add gene " + rightXref.getId() + " "
-//									+ rightXref.getDataSource().getFullName() + "\n");
+						if (error > olderror)
+							errorString = (errorString + "  " + error
+									+ "\t add gene " + rightXref.getId() + " "
+									+ rightXref.getDataSource().getFullName() + "\n");
 						olderror = error;
 						addedXrefs.add(rightXref);
-					}*/
+					}
 					error += newDb.addLink(mainXref, rightXref);
-//					if (error > olderror)
-//						System.out.println("  " + error
-//								+ "\t add link between " + mainXref.getId()
-//								+ " " + mainXref.getDataSource().getFullName()
-//								+ " and " + rightXref.getId() + " "
-//								+ rightXref.getDataSource().getFullName());
-//					if (error > olderror)
-//						errorString = (errorString + "  " + error
-//								+ "\t add link between " + mainXref.getId()
-//								+ " " + mainXref.getDataSource().getFullName()
-//								+ " and " + rightXref.getId() + " "
-//								+ rightXref.getDataSource().getFullName() + "\n");
-//					olderror = error;
+					if (error > olderror)
+						errorString = (errorString + "  " + error
+								+ "\t add link between " + mainXref.getId()
+								+ " " + mainXref.getDataSource().getFullName()
+								+ " and " + rightXref.getId() + " "
+								+ rightXref.getDataSource().getFullName() + "\n");
+					olderror = error;
 				}
 			}
 			olderror = error;
 			i++;
-			System.out.println(i);
+			if (i%1000==0)System.out.println(i);
 		}
 	}
+	public void addEntry(Map<Xref, HashSet<Xref>> dbEntries, Map<Xref, SnpAttributes>  geneSet, boolean flag)
+			throws IDMapperException {
+		int i=0;
+		for (Xref mainXref : dbEntries.keySet()) {
+			progress++;
+			if (addedXrefs.add(mainXref))
+				newDb.addGene(mainXref);
+			newDb.addLink(mainXref, mainXref);
 
+
+			SnpAttributes gene = geneSet.get(mainXref);
+			if (gene!=null && gene.getSymbol()!=null)
+				newDb.addAttribute(mainXref, "Symbol", gene.getSymbol());
+			if (gene!=null && gene.getChrom_start()!=null)
+				newDb.addAttribute(mainXref, "Chromosome position start (bp)", gene.getChrom_start());
+			if (gene!=null && gene.getChrom_end()!=null)
+				newDb.addAttribute(mainXref, "Chromosome position end (bp)", gene.getChrom_end());
+			if (gene!=null && gene.getChromosme()!=null)
+				newDb.addAttribute(mainXref, "Chromosome", gene.getChromosme());
+			if (gene!=null && gene.getAllele()!=null)
+				newDb.addAttribute(mainXref, "Variant Alleles", gene.getAllele());
+			if (gene!=null && gene.getMinor_allele_freq()!=null)
+				newDb.addAttribute(mainXref, "MAF", gene.getMinor_allele_freq());
+
+			for (Xref rightXref : dbEntries.get(mainXref)) {
+				if (!rightXref.equals(mainXref) && rightXref != null) {
+					if (addedXrefs.add(rightXref))
+						newDb.addGene(rightXref);
+					newDb.addLink(mainXref, rightXref);
+				}
+			}
+			i++;
+			if (i%1000==0){
+				System.out.println(i);
+
+				newDb.commit();
+			}
+		}
+	}
 	public void finalizeDb() throws IDMapperException {
 		newDb.finalize();
 	}
