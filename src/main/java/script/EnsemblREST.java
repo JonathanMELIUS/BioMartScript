@@ -194,6 +194,7 @@ public class EnsemblREST {
 	}
 	public static void runQC(File oldDB, String path,SpeciesConfiguration config) 
 			throws IDMapperException, SQLException, FileNotFoundException{
+		String fileName = path+"report_"+config.getFileName()+".qc";
 		OutputStream out = new FileOutputStream(fileName);
 		BridgeQC main = new BridgeQC (
 			oldDB,
@@ -201,7 +202,6 @@ public class EnsemblREST {
 			out
 		);	
 		main.run();
-		String fileName = path+"report_"+config.getFileName()+".qc";
 		out.flush();
 		out.close();
 	}
