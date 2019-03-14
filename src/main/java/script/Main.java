@@ -267,13 +267,14 @@ public class Main {
 	 */
 	public static void runQC(File oldDB, String path, String dbName){
 		try {
-			BridgeQC main = new BridgeQC (oldDB,
-					new File(path+dbName+".bridge"));	
-			main.run();
 			String fileName = path+"report_"+dbName+".qc";
-			PrintWriter pw  = new PrintWriter(new FileOutputStream(fileName));	
-			pw.println(main.getOutput());
-			pw.close();
+			OutputStream out = new FileOutputStream(fileName);
+			BridgeQC main = new BridgeQC (oldDB,
+					new File(path+dbName+".bridge"),
+					out);	
+			main.run();
+			out.flush();
+			out.close();
 		} catch (Exception e) {
 			e.printStackTrace();
 			logger.info("Please check the path of the old database");
