@@ -18,6 +18,13 @@ mvn install:install-file -Dfile=reportbots-0.0.1-SNAPSHOT.jar -DgroupId=org.wiki
 mvn install:install-file -Dfile=org.bridgedb.tools.qc-2.4.0-SNAPSHOT.jar -DgroupId=org.bridgedb -DartifactId=org.bridgedb.tools.qc -Dversion=2.4.0-SNAPSHOT -Dpackaging=jar
 ```
 
+And then compile the code:
+
+```shell
+mvn clean assembly:single
+cp ./target/create.ensembl-0.0.1-SNAPSHOT.jar BioMart2BridgeDb.jar
+``` 
+
 Run
 ============
 In your terminal:
