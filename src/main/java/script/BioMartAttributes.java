@@ -17,7 +17,7 @@ public class BioMartAttributes {
 	}
 	public void init(){
 		try{
-			InputStream is = BioMartAttributes.class.getClassLoader().getResourceAsStream("resource/BioMartSources.tsv");	
+			InputStream is = BioMartAttributes.class.getClassLoader().getResourceAsStream("BioMartSources.tsv");	
 			loadAnInputStream(is);
 		}
 		catch (IOException ex)

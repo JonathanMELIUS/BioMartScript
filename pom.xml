@@ -44,6 +44,17 @@
           </executions>
         </plugin>
       </plugins>
+    <resources>
+      <resource>
+        <directory>src/main/resource</directory>
+        <includes>
+          <include>*.tsv</include>
+        </includes>
+        <excludes>
+          <exclude>**/*.config</exclude>
+        </excludes>
+      </resource>
+    </resources>
   </build>
 
   <dependencies>
