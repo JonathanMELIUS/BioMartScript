@@ -22,7 +22,7 @@ And then compile the code:
 
 ```shell
 mvn clean assembly:single
-cp ./target/create.ensembl-0.0.1-SNAPSHOT.jar BioMart2BridgeDb.jar
+cp ./target/create.ensembl-0.0.1-SNAPSHOT-jar-with-dependencies.jar BioMart2BridgeDb.jar
 ``` 
 
 Run
