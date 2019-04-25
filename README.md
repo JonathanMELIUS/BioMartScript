@@ -42,9 +42,9 @@ java -jar BioMart2BridgeDb.jar \<configFile\> \<outputPath\> \<oldDB\> \<inclusi
 List of default config files:
 ============
 
-Configuration files can be found in the [src/resource](src/resource) folder.
+Configuration files can be found in https://github.com/bridgedb/create-bridgedb-genedb-config/tree/master/resource .
 
-Example: [Danio rerio config file](https://raw.githubusercontent.com/JonathanMELIUS/BioMartScript/bc62ed7fba16dd143292ee10fb4e261d196dd7a6/src/resource/DanioRerio.config)
+Example: [Bos taurus config file](https://raw.githubusercontent.com/bridgedb/create-bridgedb-genedb-config/master/resource/BosTaurus.config)
 
 How to create your own config file
 ============
