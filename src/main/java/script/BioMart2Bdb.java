@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -57,51 +58,60 @@ public class BioMart2Bdb {
 				externalSource="uniprot_sptrembl";
 			}
 			System.out.println("Downloading:" +split[1]);
-			ds = DataSource.getExistingByFullName(bio.getReference(externalSource).get(0).getGpmlName());
-			line = br.readLine(); //Skip the header
-			while (line != null) {	
-				split = line.split("\t");
-				Xref mainXref = new Xref(split[0], DataSource.getExistingBySystemCode("En"));
-				if (split[1].length()>1){ // only parse if there is a external reference in this Ensembl id
-					Xref xref = new Xref(split[1],ds);
-					GeneAttributes gene = new GeneAttributes(split[2], split[3], split[4], split[5]);
-					geneSet.put(mainXref, gene);
-					geneSet.put(xref, gene);
-					HashSet<Xref> xrefSet = dbEntries.get(mainXref);
-					if (xrefSet==null){
-						HashSet<Xref> database = new HashSet<Xref>();
-						database.add(xref);
-						dbEntries.put(mainXref, database);
+			ArrayList<BioMartReference> bioMartReference = bio.getReference(externalSource);
+			
+			if(bioMartReference.size()==0) {
+				System.err.println(externalSource + " not present in BioMartSources file (BioMartSources.tsv)");
+			} else {
+				
+				String gpmlName = bioMartReference.get(0).getGpmlName();
+				ds = DataSource.getExistingByFullName(gpmlName);
+				
+				line = br.readLine(); //Skip the header
+				while (line != null) {	
+					split = line.split("\t");
+					Xref mainXref = new Xref(split[0], DataSource.getExistingBySystemCode("En"));
+					if (split[1].length()>1){ // only parse if there is a external reference in this Ensembl id
+						Xref xref = new Xref(split[1],ds);
+						GeneAttributes gene = new GeneAttributes(split[2], split[3], split[4], split[5]);
+						geneSet.put(mainXref, gene);
+						geneSet.put(xref, gene);
+						HashSet<Xref> xrefSet = dbEntries.get(mainXref);
+						if (xrefSet==null){
+							HashSet<Xref> database = new HashSet<Xref>();
+							database.add(xref);
+							dbEntries.put(mainXref, database);
+						}
+						else{
+							xrefSet.add(xref);
+						}
 					}
 					else{
-						xrefSet.add(xref);
+						if (!dbEntries.containsKey(mainXref)){
+							HashSet<Xref> database = new HashSet<Xref>();
+							dbEntries.put(mainXref, database);
+						}
 					}
+					line = br.readLine();
 				}
-				else{
-					if (!dbEntries.containsKey(mainXref)){
-						HashSet<Xref> database = new HashSet<Xref>();
-						dbEntries.put(mainXref, database);
-					}
-				}
-				line = br.readLine();
+			  }
 			}
-		}
-		catch (ArrayIndexOutOfBoundsException ae){
-			logger.info("Incorrect datasource: "+split[0]+"\n"+
-					"Please check the datasource here: "+
-					 config.getEndpoint()+"martservice?type=attributes&dataset="+config.getSpecies()
-					 );
-		}
-		catch (IndexOutOfBoundsException e){
-			e.printStackTrace();
-			logger.info(externalSource+" is not present in the BioMartSources.tsv file,"+
-					" please add it to conver into a BridgeDb datasource"+"\n"+
-					"BridgeDb datasource: https://raw.githubusercontent.com/bridgedb/BridgeDb/master/org.bridgedb.bio/resources/org/bridgedb/bio/datasources.txt"+"\n"+
-					"BioMart datasource: "+config.getEndpoint()+"martservice?type=attributes&dataset="+config.getSpecies());
-		}
-		catch (Exception e){
-			e.printStackTrace();
-		}
+			catch (ArrayIndexOutOfBoundsException ae){
+				logger.info("Incorrect datasource: "+split[0]+"\n"+
+						"Please check the datasource here: "+
+						 config.getEndpoint()+"martservice?type=attributes&dataset="+config.getSpecies()
+						 );
+			}
+			catch (IndexOutOfBoundsException e){
+				e.printStackTrace();
+				logger.info(externalSource+" is not present in the BioMartSources.tsv file,"+
+						" please add it to conver into a BridgeDb datasource"+"\n"+
+						"BridgeDb datasource: https://raw.githubusercontent.com/bridgedb/BridgeDb/master/org.bridgedb.bio/resources/org/bridgedb/bio/datasources.txt"+"\n"+
+						"BioMart datasource: "+config.getEndpoint()+"martservice?type=attributes&dataset="+config.getSpecies());
+			}
+			catch (Exception e){
+				e.printStackTrace();
+			}
 		br.close();
 	}
 

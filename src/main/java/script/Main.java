@@ -96,7 +96,8 @@ public class Main {
 			}
 			else{
 				SpeciesConfiguration config = new SpeciesConfiguration(dir.getAbsolutePath());
-				runDB(config, path,inclusive);
+				
+				runDB(config, path, inclusive);
 				if (qc) report(false,pathOld,path,config);			
 			}
 			break;

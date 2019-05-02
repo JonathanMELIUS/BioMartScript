@@ -37,12 +37,15 @@ public class QueryBioMart {
 	
 	public static InputStream getDataStream(Document xml, String endpoint) {
 		try {
+			
 			String encodedXml = docToString(xml);
 			encodedXml = URLEncoder.encode(encodedXml, "UTF-8"); // encode to url
 			URL url = new URL(endpoint+"martservice/result?query=" + encodedXml);
+			
+			//System.out.println(endpoint+"?query=" + encodedXml);
+			//System.out.flush();
+			//URL url = new URL(endpoint+"?query=" + encodedXml);
 
-//			System.out.println("Biomart query URL: " + url.toString());
-//			logger.info("Biomart query URL: " + url.toString());
 			HttpURLConnection urlc = (HttpURLConnection) url.openConnection();
 			urlc.setDoOutput(true);
 			int code = urlc.getResponseCode();
@@ -159,8 +162,10 @@ public class QueryBioMart {
 	}
 	public static void loadBiomartAttributes(BioMartAttributes bio, SpeciesConfiguration config ){
 		
-		String biomart = config.getEndpoint()+"martservice?type=attributes&dataset="+config.getSpecies();
-	
+		String biomart = config.getEndpoint()+"?type=attributes&dataset="+config.getSpecies();
+		//String biomart = config.getEndpoint()+"martservice?type=attributes&dataset="+config.getSpecies();
+		
+		
 		String extProbe = config.getSpecies()+"__eFG";
 
 		InputStream is = null;
