@@ -54,7 +54,7 @@ public class QueryBioMart {
 			}
 			return urlc.getInputStream();
 		}
-		catch (Exception e) {
+		catString biomart = config.getEndpoint()+"?type=attributes&dataset="+config.getSpch (Exception e) {
 			e.printStackTrace();
 		}
 		return null;
@@ -162,8 +162,8 @@ public class QueryBioMart {
 	}
 	public static void loadBiomartAttributes(BioMartAttributes bio, SpeciesConfiguration config ){
 		
-		String biomart = config.getEndpoint()+"?type=attributes&dataset="+config.getSpecies();
-		//String biomart = config.getEndpoint()+"martservice?type=attributes&dataset="+config.getSpecies();
+		//String biomart = config.getEndpoint()+"?type=attributes&dataset="+config.getSpecies();
+		String biomart = config.getEndpoint()+"martservice?type=attributes&dataset="+config.getSpecies();
 		
 		
 		String extProbe = config.getSpecies()+"__eFG";
