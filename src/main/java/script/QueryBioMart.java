@@ -54,7 +54,7 @@ public class QueryBioMart {
 			}
 			return urlc.getInputStream();
 		}
-		catString biomart = config.getEndpoint()+"?type=attributes&dataset="+config.getSpch (Exception e) {
+		catch (Exception e) {
 			e.printStackTrace();
 		}
 		return null;
