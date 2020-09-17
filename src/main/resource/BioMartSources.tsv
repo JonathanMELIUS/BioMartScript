@@ -5,6 +5,7 @@ go_accession	GO term accession	GeneOntology	T
 ccds	CCDS ID	CCDS	Cc
 embl	EMBL (Genbank) ID	EMBL	Em
 entrezgene	EntrezGene ID	Entrez Gene	L
+entrezgene_id	EntrezGene ID	Entrez Gene	L
 flybase_gene_id	FlyBase Gene ID	FlyBase	F
 flybase_transcript_id	FlyBase Transcript ID	FlyBase	F
 flybase_translation_id	FlyBase Protein ID	FlyBase	F
@@ -52,6 +53,8 @@ unigene	Unigene ID	UniGene	U
 uniprot_sptrembl	UniProt/TrEMBL Accession	Uniprot-TrEMBL	S
 uniprot_sptrembl	UniProtKB/TrEMBL ID	Uniprot-TrEMBL	S
 uniprot_sptrembl	UniProt/TrEMBL ID	Uniprot-TrEMBL	S
+uniprotsptrembl	UniProt/TrEMBL ID	Uniprot-TrEMBL	S
+uniprotswissprot	UniProt/SwissProt Accession	Uniprot-SwissProt	Sp
 uniprot_swissprot_accession	UniProt/SwissProt Accession	Uniprot-SwissProt	Sp
 uniprot_swissprot_accession	UniProtKB/SwissProt ID	Uniprot-SwissProt	Sp
 uniprot_swissprot_accession	UniProt/SwissProt ID	Uniprot-SwissProt	Sp
