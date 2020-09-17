@@ -54,7 +54,7 @@ public class BioMart2Bdb {
 		DataSource ds=null;
 		try{
 			if (externalSource.equals("uniprot_swissprot_accession") 
-				|| externalSource.equals("uniprot_swissprot")){
+				|| externalSource.equals("uniprot_swissprot") || externalSource.equals("uniprotswissprot") || externalSource.equals("uniprotsptrembl")){
 				externalSource="uniprot_sptrembl";
 			}
 			System.out.println("Downloading:" +split[1]);
