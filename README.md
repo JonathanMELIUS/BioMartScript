@@ -7,22 +7,11 @@ A script to create a gene-focussed BrigdeDb database based on Ensembl BioMART.
 Installation
 ============
 
-Install the jars in the lib/ folder:
-
-```shell
-cd lib
-mvn install:install-file -Dfile=org.pathvisio.core.jar -DgroupId=org.pathvisio -DartifactId=pathvisio-core -Dversion=3.3.0 -Dpackaging=jar
-mvn install:install-file -Dfile=org.wikipathways.webservice.api.lib.jar -DgroupId=org.pathvisio -DartifactId=wikipathways-client -Dversion=3.2.1 -Dpackaging=jar
-mvn install:install-file -Dfile=nl.helixsoft.xml.jar -DgroupId=nl.helixsoft -DartifactId=xml -Dversion=1.0.0 -Dpackaging=jar
-mvn install:install-file -Dfile=reportbots-0.0.1-SNAPSHOT.jar -DgroupId=org.wikipathways -DartifactId=reportbots -Dversion=0.0.1-SNAPSHOT -Dpackaging=jar
-mvn install:install-file -Dfile=org.bridgedb.tools.qc-2.4.0-SNAPSHOT.jar -DgroupId=org.bridgedb -DartifactId=org.bridgedb.tools.qc -Dversion=2.4.0-SNAPSHOT -Dpackaging=jar
-```
-
-And then compile the code:
+Compile the code:
 
 ```shell
 mvn clean assembly:single
-cp target/BioMart2BridgeDb-jar-with-dependencies.jar BioMart2BridgeDb.jar
+cp target/org.bridgedb.genedb-jar-with-dependencies.jar BioMart2BridgeDb.jar
 ``` 
 
 Run
