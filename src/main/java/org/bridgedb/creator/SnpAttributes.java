@@ -1,7 +1,22 @@
-package script;
+// Creating BridgeDb Ensembl Gene Databases
+// Copyright 2012-2021 BiGCaT Bioinformatics
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+package org.bridgedb.creator;
 
 public class SnpAttributes {
-	
+
 	private String chromosome;
 	private String symbol;
 	private String chrom_start;
@@ -13,11 +28,8 @@ public class SnpAttributes {
 	private String minor_allele_count;
 	private String validated;
 
-
-	public SnpAttributes(String chromosome, String symbol, String chrom_start,
-			String chrom_end, String chrom_strand,
-			String minor_allele, String minor_allele_freq,
-			String minor_allele_count, String validated, String allele) {
+	public SnpAttributes(String chromosome, String symbol, String chrom_start, String chrom_end, String chrom_strand,
+			String minor_allele, String minor_allele_freq, String minor_allele_count, String validated, String allele) {
 		super();
 		this.chromosome = chromosome;
 		this.symbol = symbol;
@@ -30,15 +42,19 @@ public class SnpAttributes {
 		this.minor_allele_count = minor_allele_count;
 		this.validated = validated;
 	}
+
 	public String getChromosme() {
 		return chromosome;
 	}
+
 	public void setChromosome(String chromosome) {
 		this.chromosome = chromosome;
 	}
+
 	public String getSymbol() {
 		return symbol;
 	}
+
 	public void setSymbol(String symbol) {
 		this.symbol = symbol;
 	}
@@ -50,6 +66,7 @@ public class SnpAttributes {
 		result = prime * result + ((symbol == null) ? 0 : symbol.hashCode());
 		return result;
 	}
+
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj)
@@ -66,54 +83,71 @@ public class SnpAttributes {
 			return false;
 		return true;
 	}
+
 	public String getChrom_start() {
 		return chrom_start;
 	}
+
 	public void setChrom_start(String chrom_start) {
 		this.chrom_start = chrom_start;
 	}
+
 	public String getChrom_end() {
 		return chrom_end;
 	}
+
 	public void setChrom_end(String chrom_end) {
 		this.chrom_end = chrom_end;
 	}
+
 	public String getChrom_strand() {
 		return chrom_strand;
 	}
+
 	public void setChrom_strand(String chrom_strand) {
 		this.chrom_strand = chrom_strand;
 	}
+
 	public String getAllele() {
 		return allele;
 	}
+
 	public void setAllele(String allele) {
 		this.allele = allele;
 	}
+
 	public String getMinor_allele() {
 		return minor_allele;
 	}
+
 	public void setMinor_allele(String minor_allele) {
 		this.minor_allele = minor_allele;
 	}
+
 	public String getMinor_allele_freq() {
 		return minor_allele_freq;
 	}
+
 	public void setMinor_allele_freq(String minor_allele_freq) {
 		this.minor_allele_freq = minor_allele_freq;
 	}
+
 	public String getMinor_allele_count() {
 		return minor_allele_count;
 	}
+
 	public void setMinor_allele_count(String minor_allele_count) {
 		this.minor_allele_count = minor_allele_count;
 	}
+
 	public String getValidated() {
 		return validated;
 	}
+
 	public void setValidated(String validated) {
 		this.validated = validated;
 	}
+
 	public String getChromosome() {
 		return chromosome;
 	}
