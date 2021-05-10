@@ -18,7 +18,9 @@ Run
 ============
 In your terminal:
 
-java -jar BioMart2BridgeDb.jar \<configFile\> \<outputPath\> \<oldDB\> \<inclusive\>
+```shell
+java -jar BioMart2BridgeDb.jar <configFile> <outputPath> <oldDB> <inclusive>
+```
 
 - \<configFile\>: location of configuration file
 
